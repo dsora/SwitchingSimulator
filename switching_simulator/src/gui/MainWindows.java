@@ -3,9 +3,11 @@ package gui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
+import java.awt.GridLayout;
 import java.awt.Rectangle;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
@@ -17,12 +19,21 @@ public class MainWindows extends JFrame {
 	 * Eclipse serial version UID
 	 */
 	private static final long serialVersionUID = 6410732228111728916L;
+	
 	private JTabbedPane tabbedPane;
 	private JPanel line1;
 	private JPanel line2;
 	private JPanel line3;
 	private JPanel line4;
 	private JPanel overviewPanel;
+
+	private JPanel ovLine1;
+
+	private JPanel ovLine2;
+
+	private JPanel ovLine3;
+
+	private JPanel ovLine4;
 
 	public MainWindows(String title) {
 		super(title);
@@ -37,8 +48,23 @@ public class MainWindows extends JFrame {
 		}
 		tabbedPane = new JTabbedPane();
 
-		overviewPanel = new JPanel(new BorderLayout());
-
+		overviewPanel = new JPanel(new GridLayout(4,1));
+		
+		ovLine1 = new JPanel(new BorderLayout());
+		ovLine1.add(new JLabel("Line1"),BorderLayout.NORTH);
+		ovLine2 = new JPanel(new BorderLayout());
+		ovLine2.add(new JLabel("Line2"),BorderLayout.NORTH);
+		ovLine3 = new JPanel(new BorderLayout());
+		ovLine3.add(new JLabel("Line3"),BorderLayout.NORTH);
+		ovLine4 = new JPanel(new BorderLayout());
+		ovLine4.add(new JLabel("Line4"),BorderLayout.NORTH);
+		
+		overviewPanel.add(ovLine1);
+		overviewPanel.add(ovLine2);
+		overviewPanel.add(ovLine3);
+		overviewPanel.add(ovLine4);
+		
+		
 		line1 = new LinePanel();
 		line2 = new LinePanel();
 		line3 = new LinePanel();
@@ -49,6 +75,8 @@ public class MainWindows extends JFrame {
 		tabbedPane.add("Line 2", line2);
 		tabbedPane.add("Line 3", line3);
 		tabbedPane.add("Line 4", line4);
+		
+		
 
 		this.add(tabbedPane);
 		// this.setLayout(new BorderLayout());
