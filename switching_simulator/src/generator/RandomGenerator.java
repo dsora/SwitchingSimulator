@@ -9,7 +9,7 @@ import java.util.HashSet;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 public class RandomGenerator {
-	private static final int SAMPLES=17500; //number of samples. 1sample/30min = 17520/year
+	private static final int SAMPLES = 17500; //number of samples. 1sample/30min = 17520/year
 	private static final int PREDICTIONS=17500; //number of predictions. 1prediction/30min = 17520/year
 	private static final double MEAN = 10.0;//average kWh/day ---> 3650 kWh/year
 	private static final double VARIANCE = 2.0;
@@ -146,7 +146,7 @@ public class RandomGenerator {
 			return false;
 		}
 		for(int i = 0; i < PREDICTIONS; i++){
-			Date d = new Date(now_msec);
+			//Date d = new Date(now_msec);
 			double sample = getNextConsumptionValue(new Date(now_msec));
 			if(writer != null){
 				writer.println(sample+" "+now_msec);// + " "+d.toString());

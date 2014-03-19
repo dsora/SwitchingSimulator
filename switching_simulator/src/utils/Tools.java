@@ -30,6 +30,7 @@ public class Tools {
 			while((line = br.readLine())!=null){
 				String[] couple = line.split(" ");
 				result.addSample(new Date(Long.valueOf(couple[1])), Double.valueOf(couple[0]));
+				//System.out.println(Long.valueOf(couple[1])+ " " + Double.valueOf(couple[0]));
 			}
 			br.close();
 			return result;
