@@ -19,7 +19,7 @@ public class RandomGenerator {
 
 	}
 	
-	private static double getNextConsumptionValue(Date d){
+	public static double getNextConsumptionValue(Date d){
 		HashSet<String> spring = new HashSet<String>();
 		spring.add("mar");
 		spring.add("apr");

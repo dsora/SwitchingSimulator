@@ -14,7 +14,18 @@ public class InformationSet {
 	private Map<Date, Double> extreme_morning;
 	private Map<Date, Double> extreme_afternoon;
 	private Map<Date, Double> extreme_evening;
-
+	
+	//number of elements in the maps
+	private long mn_size;
+	private long mm_size;
+	private long ma_size;
+	private long me_size;
+	private long en_size;
+	private long em_size;
+	private long ee_size;
+	private long ea_size;
+	
+	
 	private double mean_mn;
 	private double mean_mm;
 	private double mean_ma;
@@ -77,6 +88,14 @@ public class InformationSet {
 		this.m2_em = 0.0;
 		this.m2_ea = 0.0;
 		this.m2_ee = 0.0;
+		this.mn_size = 0;
+		this.mm_size = 0;
+		this.ma_size = 0;
+		this.me_size = 0;
+		this.en_size = 0;
+		this.em_size = 0;
+		this.ee_size = 0;
+		this.ea_size = 0;
 	}
 
 	@Override
@@ -505,36 +524,44 @@ public class InformationSet {
 			int h = Integer.parseInt(hhmmss[0]);
 			if (h >= 0 && h < 8) {
 				// CASE: night
-				middle_night.put(key, value);
+				//middle_night.put(key, value);
+				mn_size++;
 				double delta = value - mean_mn;
-				double n = (double) (middle_night.size());
-				mean_mn += (delta / n); // update mean
+				//double n = (double) (middle_night.size());
+				mean_mn += (delta / mn_size); // update mean
 				m2_mn += (value - mean_mn) * delta;// update m2
-				variance_mn = m2_mn / (n - 1.0); // update variance
+				if(mn_size>1)
+					variance_mn = m2_mn / (mn_size - 1.0); // update variance
 			} else if (h >= 8 && h < 14) {
 				// CASE: morning
-				middle_morning.put(key, value);
+				//middle_morning.put(key, value);
 				double delta = value - mean_mm;
-				double n = (double) (middle_morning.size());
-				mean_mm += (delta / n); // update mean
+				//double n = (double) (middle_morning.size());
+				mm_size++;
+				mean_mm += (delta / mm_size); // update mean
 				m2_mm += (value - mean_mm) * delta;// update m2
-				variance_mm = m2_mm / (n - 1.0); // update variance
+				if(mm_size>1)
+					variance_mm = m2_mm / (mm_size - 1.0); // update variance
 			} else if (h >= 14 && h < 19) {
 				// CASE: afternoon
-				middle_afternoon.put(key, value);
+				//middle_afternoon.put(key, value);
 				double delta = value - mean_ma;
-				double n = (double) (middle_afternoon.size());
-				mean_ma += (delta / n); // update mean
+				ma_size++;
+				//double n = (double) (middle_afternoon.size());
+				mean_ma += (delta / ma_size); // update mean
 				m2_ma += (value - mean_ma) * delta;// update m2
-				variance_ma = m2_ma / (n - 1.0); // update variance
+				if(ma_size>1)
+					variance_ma = m2_ma / (ma_size - 1.0); // update variance
 			} else if (h >= 19 && h < 24) {
 				// CASE: evening
-				middle_evening.put(key, value);
+				//middle_evening.put(key, value);
 				double delta = value - mean_me;
-				double n = (double) (middle_evening.size());
-				mean_me += (delta / n); // update mean
+				//double n = (double) (middle_evening.size());
+				me_size++;
+				mean_me += (delta / me_size); // update mean
 				m2_me += (value - mean_me) * delta;// update m2
-				variance_me = m2_me / (n - 1.0); // update variance
+				if(me_size>1)
+					variance_me = m2_me / (me_size - 1.0); // update variance
 			}
 
 		} else {
@@ -542,36 +569,44 @@ public class InformationSet {
 			int h = Integer.parseInt(hhmmss[0]);
 			if (h >= 0 && h < 8) {
 				// CASE: night
-				extreme_night.put(key, value);
+				//extreme_night.put(key, value);
 				double delta = value - mean_en;
-				double n = (double) (extreme_night.size());
-				mean_en += (delta / n); // update mean
+				//double n = (double) (extreme_night.size());
+				en_size++;
+				mean_en += (delta / en_size); // update mean
 				m2_en += (value - mean_en) * delta;// update m2
-				variance_en = m2_en / (n - 1.0); // update variance
+				if(en_size>1)
+					variance_en = m2_en / (en_size - 1.0); // update variance
 			} else if (h >= 8 && h < 14) {
 				// CASE: morning
-				extreme_morning.put(key, value);
+				//extreme_morning.put(key, value);
 				double delta = value - mean_em;
-				double n = (double) (extreme_morning.size());
-				mean_em += (delta / n); // update mean
+				//double n = (double) (extreme_morning.size());
+				em_size++;
+				mean_em += (delta / em_size); // update mean
 				m2_em += (value - mean_em) * delta;// update m2
-				variance_em = m2_em / (n - 1.0); // update variance
+				if(em_size>1)
+					variance_em = m2_em / (em_size - 1.0); // update variance
 			} else if (h >= 14 && h < 19) {
 				// CASE: afternoon
-				extreme_afternoon.put(key, value);
+				//extreme_afternoon.put(key, value);
 				double delta = value - mean_ea;
-				double n = (double) (extreme_afternoon.size());
-				mean_ea += (delta / n); // update mean
+				ea_size++;
+				//double n = (double) (extreme_afternoon.size());
+				mean_ea += (delta / ea_size); // update mean
 				m2_ea += (value - mean_ea) * delta;// update m2
-				variance_ea = m2_ea / (n - 1.0); // update variance
+				if(ea_size>1)
+					variance_ea = m2_ea / (ea_size - 1.0); // update variance
 			} else if (h >= 19 && h < 24) {
 				// CASE: evening
-				extreme_evening.put(key, value);
+				//extreme_evening.put(key, value);
 				double delta = value - mean_ee;
-				double n = (double) (extreme_evening.size());
-				mean_ee += (delta / n); // update mean
+				//double n = (double) (extreme_evening.size());
+				ee_size++;
+				mean_ee += (delta / ee_size); // update mean
 				m2_ee += (value - mean_ee) * delta;// update m2
-				variance_ee = m2_ee / (n - 1.0); // update variance
+				if(ee_size>1)
+					variance_ee = m2_ee / (ee_size - 1.0); // update variance
 			}
 		}
 	}

@@ -2,6 +2,7 @@ package main;
 
 import java.io.FileNotFoundException;
 
+import threads.LineConsumption;
 import utils.InformationSet;
 import utils.Tools;
 import generator.RandomGenerator;
@@ -12,6 +13,7 @@ public class Main {
 	public static void main(String[] args) {
 		
 		//Training of random data for the simulation
+		/*
 		System.out.println(RandomGenerator.generateNormalTraining("Line1"));
 		System.out.println(RandomGenerator.generateNormalPrediction("Line1"));
 		System.out.println(RandomGenerator.generateNormalTraining("Line2"));
@@ -20,7 +22,7 @@ public class Main {
 		System.out.println(RandomGenerator.generateNormalPrediction("Line3"));
 		System.out.println(RandomGenerator.generateNormalTraining("Line4"));
 		System.out.println(RandomGenerator.generateNormalPrediction("Line4"));
-		
+		*/
 		//@SuppressWarnings("unused")
 		//MainWindows w = new MainWindows("SwitchingSimulator0.1");
 		InformationSet x = null;
@@ -30,7 +32,9 @@ public class Main {
 			
 			e.printStackTrace();
 			System.err.println("Missing file");
+			return;
 		}
+		/*
 		if(x != null){
 			System.out.println("EXTREME AFTERNOON");
 			System.out.println(x.getMean_ea());
@@ -64,7 +68,21 @@ public class Main {
 			System.out.println(x.getMean_ma());
 			System.out.println(x.getVariance_ma());
 			System.out.println(x.getMiddle_afternoon().size());
+		}*/
+		System.out.println(x.getVariance_mm());
+		LineConsumption l = new LineConsumption(x);
+		Thread t = new Thread(l);
+		InformationSet y = x;
+		t.start();
+		try {
+			Thread.sleep(5000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		l.stopThread();
+		System.out.println(x.equals(y));
+		
 	}
 
 }

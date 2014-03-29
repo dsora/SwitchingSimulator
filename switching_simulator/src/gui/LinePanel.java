@@ -11,6 +11,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 
+import threads.LineConsumption;
+
 public class LinePanel extends JPanel {
 
 	/**
@@ -20,8 +22,9 @@ public class LinePanel extends JPanel {
 
 	private JTextArea powerArea;// Area in which is listed the line consumption
 	private JTextArea informationsArea;// Area in which is listed the status
-	private Boolean status; // false: not running, true running
+	private Boolean status; // false: not running, true: running
 	private JPanel topPanel;
+	private LineConsumption lineConsumption;
 
 	private JLabel labelStatus;
 
@@ -29,12 +32,12 @@ public class LinePanel extends JPanel {
 
 	private JPanel centralPanel;
 
-	public LinePanel() {
+	public LinePanel(LineConsumption lineConsumption) {
 
 		this.powerArea = new JTextArea();
 		this.informationsArea = new JTextArea();
 		this.status = false;
-
+		this.lineConsumption = lineConsumption;
 		this.setLayout(new BorderLayout());
 
 		topPanel = new JPanel(new GridLayout(1, 2));
@@ -86,6 +89,7 @@ class ButtonAction implements ActionListener {
 		if (e.getActionCommand().equals("change")) {
 			JButton c = (JButton) (e.getSource());
 			((LinePanel) (c.getParent())).changeStatus();
+			
 		}
 	}
 
