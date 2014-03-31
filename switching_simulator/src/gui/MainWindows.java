@@ -1,21 +1,22 @@
 package gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.GraphicsEnvironment;
 import java.awt.GridLayout;
-import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-import javax.tools.Tool;
 
-import threads.LineConsumption;
 import utils.InformationSet;
 import utils.Tools;
 
@@ -27,10 +28,14 @@ public class MainWindows extends JFrame {
 	private static final long serialVersionUID = 6410732228111728916L;
 
 	private JTabbedPane tabbedPane;
-	private JPanel line1;
-	private JPanel line2;
-	private JPanel line3;
-	private JPanel line4;
+
+	protected LinePanel line1;
+	protected LinePanel line2;
+	protected LinePanel line3;
+	protected LinePanel line4;
+
+	protected boolean status;
+
 	private JPanel overviewPanel;
 
 	private JPanel ovLine1;
@@ -41,10 +46,16 @@ public class MainWindows extends JFrame {
 
 	private JPanel ovLine4;
 
+	private JPanel buttonPanel;
+
+	private JButton startAllButton;
+
+	private JButton stopAllButton;
+
 	public MainWindows(String title) {
 		super(title);
-		Rectangle maximized_size = GraphicsEnvironment
-				.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+		// Rectangle maximized_size = GraphicsEnvironment
+		// .getLocalGraphicsEnvironment().getMaximumWindowBounds();
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException e) {
@@ -52,9 +63,10 @@ public class MainWindows extends JFrame {
 		} catch (IllegalAccessException e) {
 		} catch (UnsupportedLookAndFeelException e) {
 		}
+
 		tabbedPane = new JTabbedPane();
 
-		overviewPanel = new JPanel(new GridLayout(4, 1));
+		overviewPanel = new JPanel(new GridLayout(5, 1));
 
 		ovLine1 = new JPanel(new BorderLayout());
 		ovLine1.add(new JLabel("Line1"), BorderLayout.NORTH);
@@ -70,16 +82,34 @@ public class MainWindows extends JFrame {
 		overviewPanel.add(ovLine3);
 		overviewPanel.add(ovLine4);
 
+		startAllButton = new JButton("Start all lines");
+		startAllButton.setActionCommand("start_all");
+		startAllButton.setForeground(Color.green);
+		startAllButton.addActionListener(new ButtonListener());
+
+		stopAllButton = new JButton("Stop all lines");
+		stopAllButton.setActionCommand("stop_all");
+		stopAllButton.setForeground(Color.red);
+		stopAllButton.addActionListener(new ButtonListener());
+
+		buttonPanel = new JPanel();
+		buttonPanel.add(startAllButton);
+		buttonPanel.add(stopAllButton);
+		overviewPanel.add(buttonPanel);
 		try {
-			line1 = new LinePanel(new LineConsumption(Tools.loadFile("Line1",
-					"effective_consumption")));
-			line2 = new LinePanel(new LineConsumption(Tools.loadFile("Line2",
-					"effective_consumption")));
-			line3 = new LinePanel(new LineConsumption(Tools.loadFile("Line3",
-					"effective_consumption")));
-			line4 = new LinePanel(new LineConsumption(Tools.loadFile("Line4",
-					"effective_consumption")));
-			
+			InformationSet infoSet1 = Tools.loadFile("Line1",
+					"effective_consumption");
+			line1 = new LinePanel(infoSet1);
+			InformationSet infoSet2 = Tools.loadFile("Line2",
+					"effective_consumption");
+			line2 = new LinePanel(infoSet2);
+			InformationSet infoSet3 = Tools.loadFile("Line3",
+					"effective_consumption");
+			line3 = new LinePanel(infoSet3);
+			InformationSet infoSet4 = Tools.loadFile("Line4",
+					"effective_consumption");
+			line4 = new LinePanel(infoSet4);
+
 		} catch (FileNotFoundException e) {
 
 		}
@@ -90,11 +120,55 @@ public class MainWindows extends JFrame {
 		tabbedPane.add("Line 4", line4);
 
 		this.add(tabbedPane);
+
 		// this.setLayout(new BorderLayout());
-		this.setPreferredSize(new Dimension(maximized_size.width,
-				maximized_size.height));
+		this.setPreferredSize(new Dimension(800, 600));
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setVisible(true);
 		this.pack();
+	}
+}
+
+class ButtonListener implements ActionListener {
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		if (e.getActionCommand().equals("start_all")) {
+			Container parent = (Container) e.getSource();
+			while (!(parent instanceof MainWindows)) {
+				parent = parent.getParent();
+			}
+			MainWindows mainWindows = (MainWindows) parent;
+			if (!mainWindows.line1.getStatus()) {
+				mainWindows.line1.click();
+			}
+			if (!mainWindows.line2.getStatus()) {
+				mainWindows.line2.click();
+			}
+			if (!mainWindows.line3.getStatus()) {
+				mainWindows.line3.click();
+			}
+			if (!mainWindows.line4.getStatus()) {
+				mainWindows.line4.click();
+			}
+		} else if (e.getActionCommand().equals("stop_all")) {
+			Container parent = (Container) e.getSource();
+			while (!(parent instanceof MainWindows)) {
+				parent = parent.getParent();
+			}
+			MainWindows mainWindows = (MainWindows) parent;
+			if (mainWindows.line1.getStatus()) {
+				mainWindows.line1.click();
+			}
+			if (mainWindows.line2.getStatus()) {
+				mainWindows.line2.click();
+			}
+			if (mainWindows.line3.getStatus()) {
+				mainWindows.line3.click();
+			}
+			if (mainWindows.line4.getStatus()) {
+				mainWindows.line4.click();
+			}
+		}
 	}
 }
