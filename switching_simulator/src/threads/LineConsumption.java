@@ -9,9 +9,10 @@ import utils.InformationSet;
 
 public class LineConsumption implements Runnable {
 	private final long SLEEP_TIME = 500;
-	private InformationSet info;
+	private volatile InformationSet info;
 	private volatile boolean running = false;
 	private volatile double consumption = 0;
+	private volatile boolean source = false;//true--> renewable, false--> wires 
 	private LinePanel panel;
 	private volatile double additiveLoad;
 
@@ -40,7 +41,7 @@ public class LineConsumption implements Runnable {
 			} else {
 				st = Double.toString(consumption);
 			}
-
+			source = evaulateSwitching();
 			panel.getPowerArea().setText(st);
 			try {
 				Thread.sleep(SLEEP_TIME);
@@ -52,12 +53,26 @@ public class LineConsumption implements Runnable {
 		}
 	}
 
+	private boolean evaulateSwitching() {
+		
+		return false;
+	}
+
 	public void stopThread() {
+		consumption = 0;
 		running = false;
 	}
 
 	public double getConsumption() {
 		return consumption;
+	}
+	
+	public boolean getSource(){
+		return source;
+	}
+	
+	public InformationSet getInformationSet(){
+		return info;
 	}
 
 	public void addConsumptionElement(double load) {

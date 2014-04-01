@@ -1,19 +1,17 @@
 package utils;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class InformationSet {
 
-	private Map<Date, Double> middle_night;
-	private Map<Date, Double> middle_morning;
-	private Map<Date, Double> middle_afternoon;
-	private Map<Date, Double> middle_evening;
-	private Map<Date, Double> extreme_night;
-	private Map<Date, Double> extreme_morning;
-	private Map<Date, Double> extreme_afternoon;
-	private Map<Date, Double> extreme_evening;
+//	private Map<Date, Double> middle_night;
+//	private Map<Date, Double> middle_morning;
+//	private Map<Date, Double> middle_afternoon;
+//	private Map<Date, Double> middle_evening;
+//	private Map<Date, Double> extreme_night;
+//	private Map<Date, Double> extreme_morning;
+//	private Map<Date, Double> extreme_afternoon;
+//	private Map<Date, Double> extreme_evening;
 	
 	//number of elements in the maps
 	private long mn_size;
@@ -56,14 +54,14 @@ public class InformationSet {
 
 	public InformationSet() {
 
-		this.middle_night = new HashMap<Date, Double>();
-		this.middle_morning = new HashMap<Date, Double>();
-		this.middle_afternoon = new HashMap<Date, Double>();
-		this.middle_evening = new HashMap<Date, Double>();
-		this.extreme_night = new HashMap<Date, Double>();
-		this.extreme_morning = new HashMap<Date, Double>();
-		this.extreme_afternoon = new HashMap<Date, Double>();
-		this.extreme_evening = new HashMap<Date, Double>();
+//		this.middle_night = new HashMap<Date, Double>();
+//		this.middle_morning = new HashMap<Date, Double>();
+//		this.middle_afternoon = new HashMap<Date, Double>();
+//		this.middle_evening = new HashMap<Date, Double>();
+//		this.extreme_night = new HashMap<Date, Double>();
+//		this.extreme_morning = new HashMap<Date, Double>();
+//		this.extreme_afternoon = new HashMap<Date, Double>();
+//		this.extreme_evening = new HashMap<Date, Double>();
 		this.mean_mn = 0.0;
 		this.mean_mm = 0.0;
 		this.mean_ma = 0.0;
@@ -98,287 +96,6 @@ public class InformationSet {
 		this.ea_size = 0;
 	}
 
-	@Override
-	public String toString() {
-		return "InformationSet [middle_night=" + middle_night
-				+ ", middle_morning=" + middle_morning + ", middle_afternoon="
-				+ middle_afternoon + ", middle_evening=" + middle_evening
-				+ ", extreme_night=" + extreme_night + ", extreme_morning="
-				+ extreme_morning + ", extreme_afternoon=" + extreme_afternoon
-				+ ", extreme_evening=" + extreme_evening + ", mean_mn="
-				+ mean_mn + ", mean_mm=" + mean_mm + ", mean_ma=" + mean_ma
-				+ ", mean_me=" + mean_me + ", mean_en=" + mean_en
-				+ ", mean_em=" + mean_em + ", mean_ea=" + mean_ea
-				+ ", mean_ee=" + mean_ee + ", variance_mn=" + variance_mn
-				+ ", variance_mm=" + variance_mm + ", variance_ma="
-				+ variance_ma + ", variance_me=" + variance_me
-				+ ", variance_en=" + variance_en + ", variance_em="
-				+ variance_em + ", variance_ea=" + variance_ea
-				+ ", variance_ee=" + variance_ee + "]";
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime
-				* result
-				+ ((extreme_afternoon == null) ? 0 : extreme_afternoon
-						.hashCode());
-		result = prime * result
-				+ ((extreme_evening == null) ? 0 : extreme_evening.hashCode());
-		result = prime * result
-				+ ((extreme_morning == null) ? 0 : extreme_morning.hashCode());
-		result = prime * result
-				+ ((extreme_night == null) ? 0 : extreme_night.hashCode());
-		long temp;
-		temp = Double.doubleToLongBits(m2_ea);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(m2_ee);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(m2_em);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(m2_en);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(m2_ma);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(m2_me);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(m2_mm);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(m2_mn);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(mean_ea);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(mean_ee);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(mean_em);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(mean_en);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(mean_ma);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(mean_me);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(mean_mm);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(mean_mn);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		result = prime
-				* result
-				+ ((middle_afternoon == null) ? 0 : middle_afternoon.hashCode());
-		result = prime * result
-				+ ((middle_evening == null) ? 0 : middle_evening.hashCode());
-		result = prime * result
-				+ ((middle_morning == null) ? 0 : middle_morning.hashCode());
-		result = prime * result
-				+ ((middle_night == null) ? 0 : middle_night.hashCode());
-		temp = Double.doubleToLongBits(variance_ea);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(variance_ee);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(variance_em);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(variance_en);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(variance_ma);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(variance_me);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(variance_mm);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(variance_mn);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		InformationSet other = (InformationSet) obj;
-		if (extreme_afternoon == null) {
-			if (other.extreme_afternoon != null)
-				return false;
-		} else if (!extreme_afternoon.equals(other.extreme_afternoon))
-			return false;
-		if (extreme_evening == null) {
-			if (other.extreme_evening != null)
-				return false;
-		} else if (!extreme_evening.equals(other.extreme_evening))
-			return false;
-		if (extreme_morning == null) {
-			if (other.extreme_morning != null)
-				return false;
-		} else if (!extreme_morning.equals(other.extreme_morning))
-			return false;
-		if (extreme_night == null) {
-			if (other.extreme_night != null)
-				return false;
-		} else if (!extreme_night.equals(other.extreme_night))
-			return false;
-		if (Double.doubleToLongBits(m2_ea) != Double
-				.doubleToLongBits(other.m2_ea))
-			return false;
-		if (Double.doubleToLongBits(m2_ee) != Double
-				.doubleToLongBits(other.m2_ee))
-			return false;
-		if (Double.doubleToLongBits(m2_em) != Double
-				.doubleToLongBits(other.m2_em))
-			return false;
-		if (Double.doubleToLongBits(m2_en) != Double
-				.doubleToLongBits(other.m2_en))
-			return false;
-		if (Double.doubleToLongBits(m2_ma) != Double
-				.doubleToLongBits(other.m2_ma))
-			return false;
-		if (Double.doubleToLongBits(m2_me) != Double
-				.doubleToLongBits(other.m2_me))
-			return false;
-		if (Double.doubleToLongBits(m2_mm) != Double
-				.doubleToLongBits(other.m2_mm))
-			return false;
-		if (Double.doubleToLongBits(m2_mn) != Double
-				.doubleToLongBits(other.m2_mn))
-			return false;
-		if (Double.doubleToLongBits(mean_ea) != Double
-				.doubleToLongBits(other.mean_ea))
-			return false;
-		if (Double.doubleToLongBits(mean_ee) != Double
-				.doubleToLongBits(other.mean_ee))
-			return false;
-		if (Double.doubleToLongBits(mean_em) != Double
-				.doubleToLongBits(other.mean_em))
-			return false;
-		if (Double.doubleToLongBits(mean_en) != Double
-				.doubleToLongBits(other.mean_en))
-			return false;
-		if (Double.doubleToLongBits(mean_ma) != Double
-				.doubleToLongBits(other.mean_ma))
-			return false;
-		if (Double.doubleToLongBits(mean_me) != Double
-				.doubleToLongBits(other.mean_me))
-			return false;
-		if (Double.doubleToLongBits(mean_mm) != Double
-				.doubleToLongBits(other.mean_mm))
-			return false;
-		if (Double.doubleToLongBits(mean_mn) != Double
-				.doubleToLongBits(other.mean_mn))
-			return false;
-		if (middle_afternoon == null) {
-			if (other.middle_afternoon != null)
-				return false;
-		} else if (!middle_afternoon.equals(other.middle_afternoon))
-			return false;
-		if (middle_evening == null) {
-			if (other.middle_evening != null)
-				return false;
-		} else if (!middle_evening.equals(other.middle_evening))
-			return false;
-		if (middle_morning == null) {
-			if (other.middle_morning != null)
-				return false;
-		} else if (!middle_morning.equals(other.middle_morning))
-			return false;
-		if (middle_night == null) {
-			if (other.middle_night != null)
-				return false;
-		} else if (!middle_night.equals(other.middle_night))
-			return false;
-		if (Double.doubleToLongBits(variance_ea) != Double
-				.doubleToLongBits(other.variance_ea))
-			return false;
-		if (Double.doubleToLongBits(variance_ee) != Double
-				.doubleToLongBits(other.variance_ee))
-			return false;
-		if (Double.doubleToLongBits(variance_em) != Double
-				.doubleToLongBits(other.variance_em))
-			return false;
-		if (Double.doubleToLongBits(variance_en) != Double
-				.doubleToLongBits(other.variance_en))
-			return false;
-		if (Double.doubleToLongBits(variance_ma) != Double
-				.doubleToLongBits(other.variance_ma))
-			return false;
-		if (Double.doubleToLongBits(variance_me) != Double
-				.doubleToLongBits(other.variance_me))
-			return false;
-		if (Double.doubleToLongBits(variance_mm) != Double
-				.doubleToLongBits(other.variance_mm))
-			return false;
-		if (Double.doubleToLongBits(variance_mn) != Double
-				.doubleToLongBits(other.variance_mn))
-			return false;
-		return true;
-	}
-
-	public Map<Date, Double> getMiddle_night() {
-		return middle_night;
-	}
-
-	public void setMiddle_night(Map<Date, Double> middle_night) {
-		this.middle_night = middle_night;
-	}
-
-	public Map<Date, Double> getMiddle_morning() {
-		return middle_morning;
-	}
-
-	public void setMiddle_morning(Map<Date, Double> middle_morning) {
-		this.middle_morning = middle_morning;
-	}
-
-	public Map<Date, Double> getMiddle_afternoon() {
-		return middle_afternoon;
-	}
-
-	public void setMiddle_afternoon(Map<Date, Double> middle_afternoon) {
-		this.middle_afternoon = middle_afternoon;
-	}
-
-	public Map<Date, Double> getMiddle_evening() {
-		return middle_evening;
-	}
-
-	public void setMiddle_evening(Map<Date, Double> middle_evening) {
-		this.middle_evening = middle_evening;
-	}
-
-	public Map<Date, Double> getExtreme_night() {
-		return extreme_night;
-	}
-
-	public void setExtreme_night(Map<Date, Double> extreme_night) {
-		this.extreme_night = extreme_night;
-	}
-
-	public Map<Date, Double> getExtreme_morning() {
-		return extreme_morning;
-	}
-
-	public void setExtreme_morning(Map<Date, Double> extreme_morning) {
-		this.extreme_morning = extreme_morning;
-	}
-
-	public Map<Date, Double> getExtreme_afternoon() {
-		return extreme_afternoon;
-	}
-
-	public void setExtreme_afternoon(Map<Date, Double> extreme_afternoon) {
-		this.extreme_afternoon = extreme_afternoon;
-	}
-
-	public Map<Date, Double> getExtreme_evening() {
-		return extreme_evening;
-	}
-
-	public void setExtreme_evening(Map<Date, Double> extreme_evening) {
-		this.extreme_evening = extreme_evening;
-	}
 
 	public double getMean_mn() {
 		return mean_mn;

@@ -11,7 +11,6 @@ import java.io.FileNotFoundException;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
@@ -38,19 +37,21 @@ public class MainWindows extends JFrame {
 
 	private JPanel overviewPanel;
 
-	private JPanel ovLine1;
+	private DisplayLineInfoPanel ovLine1;
 
-	private JPanel ovLine2;
+	private DisplayLineInfoPanel ovLine2;
 
-	private JPanel ovLine3;
+	private DisplayLineInfoPanel ovLine3;
 
-	private JPanel ovLine4;
+	private DisplayLineInfoPanel ovLine4;
 
 	private JPanel buttonPanel;
 
 	private JButton startAllButton;
 
 	private JButton stopAllButton;
+
+	private JPanel firstPagePanel;
 
 	public MainWindows(String title) {
 		super(title);
@@ -65,17 +66,15 @@ public class MainWindows extends JFrame {
 		}
 
 		tabbedPane = new JTabbedPane();
+		
+		firstPagePanel = new JPanel(new BorderLayout());
+		
+		overviewPanel = new JPanel(new GridLayout(4, 1));
 
-		overviewPanel = new JPanel(new GridLayout(5, 1));
-
-		ovLine1 = new JPanel(new BorderLayout());
-		ovLine1.add(new JLabel("Line1"), BorderLayout.NORTH);
-		ovLine2 = new JPanel(new BorderLayout());
-		ovLine2.add(new JLabel("Line2"), BorderLayout.NORTH);
-		ovLine3 = new JPanel(new BorderLayout());
-		ovLine3.add(new JLabel("Line3"), BorderLayout.NORTH);
-		ovLine4 = new JPanel(new BorderLayout());
-		ovLine4.add(new JLabel("Line4"), BorderLayout.NORTH);
+		ovLine1 = new DisplayLineInfoPanel("Line1");
+		ovLine2 = new DisplayLineInfoPanel("Line2");
+		ovLine3 = new DisplayLineInfoPanel("Line3");
+		ovLine4 = new DisplayLineInfoPanel("Line4");
 
 		overviewPanel.add(ovLine1);
 		overviewPanel.add(ovLine2);
@@ -95,7 +94,8 @@ public class MainWindows extends JFrame {
 		buttonPanel = new JPanel();
 		buttonPanel.add(startAllButton);
 		buttonPanel.add(stopAllButton);
-		overviewPanel.add(buttonPanel);
+		firstPagePanel.add(buttonPanel,BorderLayout.SOUTH);
+		firstPagePanel.add(overviewPanel,BorderLayout.CENTER);
 		try {
 			InformationSet infoSet1 = Tools.loadFile("Line1",
 					"effective_consumption");
@@ -113,11 +113,15 @@ public class MainWindows extends JFrame {
 		} catch (FileNotFoundException e) {
 
 		}
-		tabbedPane.add("Overview", overviewPanel);
+		tabbedPane.add("Overview", firstPagePanel);
 		tabbedPane.add("Line 1", line1);
+		ovLine1.setLinePanel(line1);
 		tabbedPane.add("Line 2", line2);
+		ovLine2.setLinePanel(line2);
 		tabbedPane.add("Line 3", line3);
+		ovLine3.setLinePanel(line3);
 		tabbedPane.add("Line 4", line4);
+		ovLine4.setLinePanel(line4);
 
 		this.add(tabbedPane);
 

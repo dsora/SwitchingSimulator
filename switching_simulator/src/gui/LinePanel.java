@@ -7,6 +7,7 @@ import java.awt.GridLayout;
 import java.awt.Label;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -53,6 +54,8 @@ public class LinePanel extends JPanel {
 	private JPanel topRightPanel;
 
 	private JPanel botRightPanel;
+
+	private JPanel statusPanel;
 	
 	public static final int DISPLAYED_VALUES = 15;
 	
@@ -66,12 +69,16 @@ public class LinePanel extends JPanel {
 		
 		powerArea.setForeground(Color.BLUE);
 		
-		topPanel = new JPanel(new GridLayout(1, 2));
-		topPanel.add(new JLabel("Status"));
+		statusPanel = new JPanel(new GridLayout(1,2));
+		statusPanel.add(new JLabel("Status:"));
 		labelStatus = new JLabel(status ? "Running" : "Stopped");
 		labelStatus.setForeground(Color.red);
-		topPanel.add(labelStatus);
-
+		statusPanel.add(labelStatus);
+		
+		topPanel = new JPanel(new GridLayout(1, 2));
+		topPanel.add(new JLabel("RealTime Consumption"));
+		topPanel.add(statusPanel);
+		
 		centralPanel = new JPanel(new GridLayout(1, 2));
 		centralPanel.add(this.powerArea);
 		// centralPanel.add(this.informationsArea);
@@ -158,6 +165,25 @@ public class LinePanel extends JPanel {
 	public boolean getStatus() {
 		return status;
 	}
+	
+	public boolean getSource(){
+		return lineConsumption.getSource();
+	}
+	
+	public double getConsumption(){
+		return lineConsumption.getConsumption();
+	}
+	
+	public String getDetails() {
+		InformationSet info = lineConsumption.getInformationSet();
+		String ret ="Status: " + (status?"Running" : "Not Running") +
+				"\nConsumption: " + lineConsumption.getConsumption()+
+				"\nMean consumption morning: "+ ((info.getMean_em()+info.getMean_mm())/2) +
+				"\nMean consumption afternoon: " + ((info.getMean_ea()+info.getMean_ma())/2)+
+				"\nMean consumption evening: " + ((info.getMean_ee()+info.getMean_me())/2)+
+				"\nMean consumption night: " + ((info.getMean_en()+info.getMean_mn())/2);
+		return ret;
+	}
 }
 
 class ButtonAction implements ActionListener {
@@ -211,6 +237,7 @@ class ButtonAction implements ActionListener {
 			panel.toRemovePanel.remove(source);
 			panel.lineConsumption.removeConsumptionElement(Double.parseDouble(id));
 			panel.validate();
+			panel.repaint();
 		}
 	}
 }
