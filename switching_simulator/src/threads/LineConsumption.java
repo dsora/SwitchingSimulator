@@ -13,6 +13,7 @@ public class LineConsumption implements Runnable {
 	private volatile boolean running = false;
 	private volatile double consumption = 0;
 	private volatile boolean source = false;//true--> renewable, false--> wires 
+	private volatile int switch_count = 0;
 	private LinePanel panel;
 	private volatile double additiveLoad;
 
@@ -24,8 +25,7 @@ public class LineConsumption implements Runnable {
 
 	@Override
 	public void run() {
-		// TODO Auto-generated method stub
-
+		
 		running = true;
 
 		while (running) {
@@ -41,7 +41,7 @@ public class LineConsumption implements Runnable {
 			} else {
 				st = Double.toString(consumption);
 			}
-			source = evaulateSwitching();
+			//source = evaulateSwitching();
 			panel.getPowerArea().setText(st);
 			try {
 				Thread.sleep(SLEEP_TIME);
@@ -53,10 +53,14 @@ public class LineConsumption implements Runnable {
 		}
 	}
 
-	private boolean evaulateSwitching() {
-		
-		return false;
+	public void setSource(boolean source) {
+		this.source = source;
 	}
+
+//	private boolean evaulateSwitching() {
+//		
+//		return false;
+//	}
 
 	public void stopThread() {
 		consumption = 0;
@@ -85,5 +89,33 @@ public class LineConsumption implements Runnable {
 		} else {
 			additiveLoad = 0;
 		}
+	}
+
+//	public void waitScheduler(Thread master) {
+//		System.out.println("Hello");
+//		try {
+//			master.join();
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//	}
+
+	public void source(boolean source) {
+		if(this.source == source) 
+			return;
+		else{
+			this.source = source;
+			switch_count++;
+		}
+		
+	}
+
+	public int getSwitch_count() {
+		return switch_count;
+	}
+
+	public void setSwitch_count(int switch_count) {
+		this.switch_count = switch_count;
 	}
 }

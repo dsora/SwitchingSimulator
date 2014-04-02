@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.GridLayout;
 
 import javax.swing.JLabel;
@@ -46,9 +47,13 @@ public class GridPanel extends JPanel{
 	public GridPanel(String status, String source, String consumption, String totalSwitches){
 		super(new GridLayout(2,4));
 		statusLabel = new JLabel("Status");
+		statusLabel.setFont(Font.decode("Arial-ITALIC-12"));
 		sourceLabel = new JLabel("Source");
+		sourceLabel.setFont(Font.decode("Arial-ITALIC-12"));
 		consumptionLabel =  new JLabel("Consumption");
+		consumptionLabel.setFont(Font.decode("Arial-ITALIC-12"));
 		totalSwitchesLabel = new JLabel("Total Switches");
+		totalSwitchesLabel.setFont(Font.decode("Arial-ITALIC-12"));
 		statusLabelValue = new JLabel(status);
 		Color color;
 		if(status.equals("Running")){

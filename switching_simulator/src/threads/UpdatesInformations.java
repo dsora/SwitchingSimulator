@@ -7,7 +7,7 @@ import gui.GridPanel;
 import gui.LinePanel;
 
 public class UpdatesInformations implements Runnable {
-	
+	private final int SLEEP_TIME = 40;
 	private GridPanel panel;
 	private LinePanel informations;
 	public UpdatesInformations(GridPanel panel, LinePanel informations){
@@ -20,7 +20,7 @@ public class UpdatesInformations implements Runnable {
 			String status = informations.getStatus()?"Running":"Not Running";
 			String source = informations.getSource()?"Renewable":"Wired";
 			String consumption = String.valueOf(informations.getConsumption());
-			String total = "0";
+			String total = String.valueOf(informations.getSwitch_count());
 			Container parent = panel.getParent();
 			if(parent == null)
 				continue;
@@ -30,7 +30,7 @@ public class UpdatesInformations implements Runnable {
 			parent.validate();
 			parent.repaint();
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(SLEEP_TIME);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

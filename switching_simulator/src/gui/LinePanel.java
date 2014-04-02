@@ -3,11 +3,12 @@ package gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.Label;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -56,27 +57,45 @@ public class LinePanel extends JPanel {
 	private JPanel botRightPanel;
 
 	private JPanel statusPanel;
+
+	private JLabel realTimelabel;
+
+	private JLabel labelStatusFix;
+
+	private JLabel addLoadLabel;
+
+	private JLabel removeLabel;
 	
-	public static final int DISPLAYED_VALUES = 15;
+	public static final int DISPLAYED_VALUES = 25;
 	
 	public LinePanel(InformationSet informationSet) {
 		
 		this.powerArea = new JTextArea();
-		// this.informationsArea = new JTextArea();
+		this.powerArea.setBorder(BorderFactory.createLineBorder(Color.black));
+		powerArea.setEditable(false);
 		this.status = false;
 		this.lineConsumption = new LineConsumption(informationSet, this);
 		this.setLayout(new BorderLayout());
-		
+		Font topFont = Font.decode("Arial-ITALIC-14");
+		Font bodyFont = Font.decode("Arial-PLAIN-12");
 		powerArea.setForeground(Color.BLUE);
 		
 		statusPanel = new JPanel(new GridLayout(1,2));
-		statusPanel.add(new JLabel("Status:"));
+		labelStatusFix = new JLabel("Status:");
+		labelStatusFix.setFont(topFont);
+		statusPanel.add(labelStatusFix);
 		labelStatus = new JLabel(status ? "Running" : "Stopped");
 		labelStatus.setForeground(Color.red);
+		labelStatus.setFont(topFont);
 		statusPanel.add(labelStatus);
+		statusPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+		realTimelabel = new JLabel("RealTime Consumption");
+		realTimelabel.setFont(topFont);
+		realTimelabel.setBorder(BorderFactory.createLineBorder(Color.black));
 		
 		topPanel = new JPanel(new GridLayout(1, 2));
-		topPanel.add(new JLabel("RealTime Consumption"));
+		//topPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+		topPanel.add(realTimelabel);
 		topPanel.add(statusPanel);
 		
 		centralPanel = new JPanel(new GridLayout(1, 2));
@@ -111,13 +130,22 @@ public class LinePanel extends JPanel {
 		loadsPanel.add(load1dot5);
 		loadsPanel.add(load2dot0);
 		loadsPanel.add(load2dot5);
-
-		topRightPanel.add(new Label("Add an electric load:"),BorderLayout.NORTH);
+		
+		addLoadLabel = new JLabel("Add an electric load:");
+		//addLoadLabel.setForeground(Color.blue);
+		
+		addLoadLabel.setFont(bodyFont);
+		
+		topRightPanel.add(addLoadLabel,BorderLayout.NORTH);
 		topRightPanel.add(loadsPanel,BorderLayout.CENTER);
 	
 		toRemovePanel = new JPanel();
+		
+		removeLabel = new JLabel("Remove a plugged load:");
+		removeLabel.setFont(bodyFont);
+		
 		botRightPanel.add(toRemovePanel,BorderLayout.CENTER);
-		botRightPanel.add(new JLabel("Remove a plugged load:"),BorderLayout.NORTH);
+		botRightPanel.add(removeLabel,BorderLayout.NORTH);
 		
 		rightPanel.add(topRightPanel);
 		rightPanel.add(botRightPanel);
@@ -128,7 +156,7 @@ public class LinePanel extends JPanel {
 		button.setActionCommand("change");
 		button.addActionListener(new ButtonAction());
 		button.setForeground(Color.green);
-		
+		button.setVisible(false);
 		this.add(topPanel, BorderLayout.NORTH);
 		this.add(centralPanel, BorderLayout.CENTER);
 		this.add(button, BorderLayout.SOUTH);
@@ -150,18 +178,15 @@ public class LinePanel extends JPanel {
 		validate();
 	}
 	
-	public void click(){
+	public boolean click(){
 		button.doClick();
+		return status;
 	}
 
 	public JTextArea getPowerArea() {
 		return powerArea;
 	}
-
-	// public JTextArea getInformationsArea() {
-	// return informationsArea;
-	// }
-
+	
 	public boolean getStatus() {
 		return status;
 	}
@@ -174,6 +199,10 @@ public class LinePanel extends JPanel {
 		return lineConsumption.getConsumption();
 	}
 	
+	public int getSwitch_count(){
+		return lineConsumption.getSwitch_count();
+	}
+	
 	public String getDetails() {
 		InformationSet info = lineConsumption.getInformationSet();
 		String ret ="Status: " + (status?"Running" : "Not Running") +
@@ -184,13 +213,26 @@ public class LinePanel extends JPanel {
 				"\nMean consumption night: " + ((info.getMean_en()+info.getMean_mn())/2);
 		return ret;
 	}
+
+	public LineConsumption getLineConsumption() {
+		return lineConsumption;
+	}
+
+	public void setLineConsumption(LineConsumption lineConsumption) {
+		this.lineConsumption = lineConsumption;
+	}
+
+	public void source(boolean source) {
+		
+		lineConsumption.source(source);
+		
+	}
 }
 
 class ButtonAction implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
 		if (e.getActionCommand().equals("change")) {
 			JButton c = (JButton) (e.getSource());
 			LinePanel panel = (LinePanel) (c.getParent());

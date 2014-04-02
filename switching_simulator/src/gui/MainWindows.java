@@ -8,7 +8,10 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -16,6 +19,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import threads.MasterSwitch;
 import utils.InformationSet;
 import utils.Tools;
 
@@ -37,13 +41,13 @@ public class MainWindows extends JFrame {
 
 	private JPanel overviewPanel;
 
-	private DisplayLineInfoPanel ovLine1;
+	protected DisplayLineInfoPanel ovLine1;
 
-	private DisplayLineInfoPanel ovLine2;
+	protected DisplayLineInfoPanel ovLine2;
 
-	private DisplayLineInfoPanel ovLine3;
+	protected DisplayLineInfoPanel ovLine3;
 
-	private DisplayLineInfoPanel ovLine4;
+	protected DisplayLineInfoPanel ovLine4;
 
 	private JPanel buttonPanel;
 
@@ -52,6 +56,10 @@ public class MainWindows extends JFrame {
 	private JButton stopAllButton;
 
 	private JPanel firstPagePanel;
+	
+	protected List<LinePanel> lines;
+
+	private JButton tempButton;
 
 	public MainWindows(String title) {
 		super(title);
@@ -64,22 +72,27 @@ public class MainWindows extends JFrame {
 		} catch (IllegalAccessException e) {
 		} catch (UnsupportedLookAndFeelException e) {
 		}
-
+		lines = new ArrayList<LinePanel>();
 		tabbedPane = new JTabbedPane();
 		
 		firstPagePanel = new JPanel(new BorderLayout());
 		
-		overviewPanel = new JPanel(new GridLayout(4, 1));
+		overviewPanel = new JPanel(new GridLayout(0, 1));
 
 		ovLine1 = new DisplayLineInfoPanel("Line1");
+		ovLine1.setBorder(BorderFactory.createLineBorder(Color.black));
 		ovLine2 = new DisplayLineInfoPanel("Line2");
-		ovLine3 = new DisplayLineInfoPanel("Line3");
+		ovLine2.setBorder(BorderFactory.createLineBorder(Color.black));
+		ovLine3 = new DisplayLineInfoPanel("Line3");		
+		ovLine3.setBorder(BorderFactory.createLineBorder(Color.black));
 		ovLine4 = new DisplayLineInfoPanel("Line4");
+		ovLine4.setBorder(BorderFactory.createLineBorder(Color.black));
 
 		overviewPanel.add(ovLine1);
 		overviewPanel.add(ovLine2);
 		overviewPanel.add(ovLine3);
 		overviewPanel.add(ovLine4);
+		
 
 		startAllButton = new JButton("Start all lines");
 		startAllButton.setActionCommand("start_all");
@@ -90,10 +103,15 @@ public class MainWindows extends JFrame {
 		stopAllButton.setActionCommand("stop_all");
 		stopAllButton.setForeground(Color.red);
 		stopAllButton.addActionListener(new ButtonListener());
+		
+		tempButton = new JButton("TESTING");
+		tempButton.addActionListener(new TempListener());
 
 		buttonPanel = new JPanel();
 		buttonPanel.add(startAllButton);
 		buttonPanel.add(stopAllButton);
+		buttonPanel.add(tempButton);
+		
 		firstPagePanel.add(buttonPanel,BorderLayout.SOUTH);
 		firstPagePanel.add(overviewPanel,BorderLayout.CENTER);
 		try {
@@ -114,15 +132,23 @@ public class MainWindows extends JFrame {
 
 		}
 		tabbedPane.add("Overview", firstPagePanel);
+		
 		tabbedPane.add("Line 1", line1);
 		ovLine1.setLinePanel(line1);
+		lines.add(line1);
+		
 		tabbedPane.add("Line 2", line2);
 		ovLine2.setLinePanel(line2);
+		lines.add(line2);
+		
 		tabbedPane.add("Line 3", line3);
 		ovLine3.setLinePanel(line3);
+		lines.add(line3);
+		
 		tabbedPane.add("Line 4", line4);
 		ovLine4.setLinePanel(line4);
-
+		lines.add(line4);
+		
 		this.add(tabbedPane);
 
 		// this.setLayout(new BorderLayout());
@@ -145,15 +171,19 @@ class ButtonListener implements ActionListener {
 			MainWindows mainWindows = (MainWindows) parent;
 			if (!mainWindows.line1.getStatus()) {
 				mainWindows.line1.click();
+				mainWindows.ovLine1.updateOnOffButton();
 			}
 			if (!mainWindows.line2.getStatus()) {
 				mainWindows.line2.click();
+				mainWindows.ovLine2.updateOnOffButton();
 			}
 			if (!mainWindows.line3.getStatus()) {
 				mainWindows.line3.click();
+				mainWindows.ovLine3.updateOnOffButton();
 			}
 			if (!mainWindows.line4.getStatus()) {
 				mainWindows.line4.click();
+				mainWindows.ovLine4.updateOnOffButton();
 			}
 		} else if (e.getActionCommand().equals("stop_all")) {
 			Container parent = (Container) e.getSource();
@@ -163,16 +193,38 @@ class ButtonListener implements ActionListener {
 			MainWindows mainWindows = (MainWindows) parent;
 			if (mainWindows.line1.getStatus()) {
 				mainWindows.line1.click();
+				mainWindows.ovLine1.updateOnOffButton();
 			}
 			if (mainWindows.line2.getStatus()) {
 				mainWindows.line2.click();
+				mainWindows.ovLine2.updateOnOffButton();
 			}
 			if (mainWindows.line3.getStatus()) {
 				mainWindows.line3.click();
+				mainWindows.ovLine3.updateOnOffButton();
 			}
 			if (mainWindows.line4.getStatus()) {
 				mainWindows.line4.click();
+				mainWindows.ovLine4.updateOnOffButton();
 			}
 		}
+	}
+}
+
+//DA ELIMINARE!!!
+class TempListener implements ActionListener {
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		Container parent = (Container) e.getSource();
+		while (!(parent instanceof MainWindows)) {
+			parent = parent.getParent();
+		}
+		MainWindows mainWindows = (MainWindows) parent;
+		MasterSwitch master = new MasterSwitch();
+		master.setInput(mainWindows.lines);
+		Thread t = new Thread(master);
+		t.start();
 	}
 }
