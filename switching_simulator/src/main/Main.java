@@ -1,75 +1,77 @@
 package main;
 
-import java.io.FileNotFoundException;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
+import java.io.File;
+import java.io.IOException;
 
-import threads.LineConsumption;
-import utils.InformationSet;
-import utils.Tools;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+
 import generator.RandomGenerator;
 import gui.MainWindows;
 
 public class Main {
+	private final static int LINES = 4;
 
 	public static void main(String[] args) {
-		
-		//Training of random data for the simulation
+
+		// Training of random data for the simulation
+		if (!checkFolder(LINES)) {
+			JOptionPane.showMessageDialog(null, "Problems with training files",
+					"Error: can't create information set",
+					JOptionPane.ERROR_MESSAGE);
+			System.exit(-1);
+		}
 		/*
-		System.out.println(RandomGenerator.generateNormalTraining("Line1"));
-		System.out.println(RandomGenerator.generateNormalPrediction("Line1"));
-		System.out.println(RandomGenerator.generateNormalTraining("Line2"));
-		System.out.println(RandomGenerator.generateNormalPrediction("Line2"));
-		System.out.println(RandomGenerator.generateNormalTraining("Line3"));
-		System.out.println(RandomGenerator.generateNormalPrediction("Line3"));
-		System.out.println(RandomGenerator.generateNormalTraining("Line4"));
-		System.out.println(RandomGenerator.generateNormalPrediction("Line4"));
-		*/
-		@SuppressWarnings("unused")
+		 * System.out.println(RandomGenerator.generateNormalTraining("Line1"));
+		 * System
+		 * .out.println(RandomGenerator.generateNormalPrediction("Line1"));
+		 * System.out.println(RandomGenerator.generateNormalTraining("Line2"));
+		 * System
+		 * .out.println(RandomGenerator.generateNormalPrediction("Line2"));
+		 * System.out.println(RandomGenerator.generateNormalTraining("Line3"));
+		 * System
+		 * .out.println(RandomGenerator.generateNormalPrediction("Line3"));
+		 * System.out.println(RandomGenerator.generateNormalTraining("Line4"));
+		 * System
+		 * .out.println(RandomGenerator.generateNormalPrediction("Line4"));
+		 */
+		Rectangle maximized_size = GraphicsEnvironment
+				 .getLocalGraphicsEnvironment().getMaximumWindowBounds();
 		MainWindows w = new MainWindows("SwitchingSimulator0.1");
-//		InformationSet x = null;
-//		try {
-//			x = Tools.loadFile("Line1", "effective_consumption");
-//		} catch (FileNotFoundException e) {
-//			
-//			e.printStackTrace();
-//			System.err.println("Missing file");
-//			return;
-//		}
-		/*
-		if(x != null){
-			System.out.println("EXTREME AFTERNOON");
-			System.out.println(x.getMean_ea());
-			System.out.println(x.getVariance_ea());
-			System.out.println(x.getExtreme_afternoon().size());
-			System.out.println("EXTREME EVENING");
-			System.out.println(x.getMean_ee());
-			System.out.println(x.getVariance_ee());
-			System.out.println(x.getExtreme_evening());
-			System.out.println("EXTREME NIGHT");
-			System.out.println(x.getMean_en());
-			System.out.println(x.getVariance_en());
-			System.out.println(x.getExtreme_night().size());
-			System.out.println("EXTREME MORNING");
-			System.out.println(x.getMean_em());
-			System.out.println(x.getVariance_em());
-			System.out.println(x.getExtreme_morning().size());
-			System.out.println("MIDDLE MORNING");
-			System.out.println(x.getMean_mm());
-			System.out.println(x.getVariance_mm());
-			System.out.println(x.getMiddle_morning().size());
-			System.out.println("MIDDLE NIGHT");
-			System.out.println(x.getMean_mn());
-			System.out.println(x.getVariance_mn());
-			System.out.println(x.getMiddle_night().size());
-			System.out.println("MIDDLE EVENING");
-			System.out.println(x.getMean_me());
-			System.out.println(x.getVariance_me());
-			System.out.println(x.getMiddle_evening().size());
-			System.out.println("MIDDLE AFTERNOON");
-			System.out.println(x.getMean_ma());
-			System.out.println(x.getVariance_ma());
-			System.out.println(x.getMiddle_afternoon().size());
-		}*/
-	
+		w.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		w.setVisible(true);
+		//w.setExtendedState(w.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+		w.setPreferredSize(maximized_size.getSize());
+		w.pack();
+	}
+
+	private static boolean checkFolder(int lines) {
+		File folder = new File("Data");
+		if (!folder.exists()) {
+			for (int i = 1; i <= lines; i++) {
+				File f = new File("Data" + File.separator + "Line" + i);
+				f.mkdirs();
+				File file = new File(f.getPath() + File.separator
+						+ "effective_consumption");
+				File file2 = new File(f.getPath() + File.separator
+						+ "predicted_consumption");
+				try {
+					file.createNewFile();
+					file2.createNewFile();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				if (!(RandomGenerator.generateNormalPrediction("Line" + i) && RandomGenerator
+						.generateNormalTraining("Line" + i))) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 }

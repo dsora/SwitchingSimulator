@@ -7,7 +7,7 @@ import gui.GridPanel;
 import gui.LinePanel;
 
 public class UpdatesInformations implements Runnable {
-	private final int SLEEP_TIME = 40;
+	private final int SLEEP_TIME = 45;
 	private GridPanel panel;
 	private LinePanel informations;
 	public UpdatesInformations(GridPanel panel, LinePanel informations){

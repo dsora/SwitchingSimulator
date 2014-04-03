@@ -8,7 +8,7 @@ import java.util.Date;
 import utils.InformationSet;
 
 public class LineConsumption implements Runnable {
-	private final long SLEEP_TIME = 500;
+	private final long SLEEP_TIME = 100;
 	private volatile InformationSet info;
 	private volatile boolean running = false;
 	private volatile double consumption = 0;

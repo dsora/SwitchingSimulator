@@ -3,7 +3,6 @@ package gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -60,6 +59,8 @@ public class MainWindows extends JFrame {
 	protected List<LinePanel> lines;
 
 	private JButton tempButton;
+
+	private JPanel maxiPanel;
 
 	public MainWindows(String title) {
 		super(title);
@@ -131,7 +132,9 @@ public class MainWindows extends JFrame {
 		} catch (FileNotFoundException e) {
 
 		}
-		tabbedPane.add("Overview", firstPagePanel);
+		//tabbedPane.add("Overview", firstPagePanel);
+		maxiPanel = new JPanel(new GridLayout(1,2));
+		maxiPanel.add(firstPagePanel);
 		
 		tabbedPane.add("Line 1", line1);
 		ovLine1.setLinePanel(line1);
@@ -149,13 +152,12 @@ public class MainWindows extends JFrame {
 		ovLine4.setLinePanel(line4);
 		lines.add(line4);
 		
-		this.add(tabbedPane);
-
-		// this.setLayout(new BorderLayout());
-		this.setPreferredSize(new Dimension(800, 600));
-		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		this.setVisible(true);
-		this.pack();
+		maxiPanel.add(tabbedPane);
+		
+		this.add(maxiPanel);
+		
+		
+		//this.setPreferredSize(new Dimension(Integer.MAX_VALUE,Integer.MAX_VALUE));
 	}
 }
 
@@ -218,6 +220,7 @@ class TempListener implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		Container parent = (Container) e.getSource();
+		((JButton)parent).setEnabled(false);
 		while (!(parent instanceof MainWindows)) {
 			parent = parent.getParent();
 		}
