@@ -8,14 +8,15 @@ import java.util.Date;
 import utils.InformationSet;
 
 public class LineConsumption implements Runnable {
-	private final long SLEEP_TIME = 100;
+	private final long SLEEP_TIME = 1;
 	private volatile InformationSet info;
 	private volatile boolean running = false;
 	private volatile double consumption = 0;
-	private volatile boolean source = false;//true--> renewable, false--> wires 
+	private volatile boolean source = false;// true--> renewable, false--> wires
 	private volatile int switch_count = 0;
 	private LinePanel panel;
 	private volatile double additiveLoad;
+	private volatile int dummy = 0;
 
 	public LineConsumption(InformationSet info, LinePanel panel) {
 		this.info = info;
@@ -25,30 +26,35 @@ public class LineConsumption implements Runnable {
 
 	@Override
 	public void run() {
-		
+
 		running = true;
-
+		dummy = 0;
 		while (running) {
-			Date d = new Date();
-			double sample = RandomGenerator.getNextConsumptionValue(d);
-			sample += additiveLoad;
-			info.addSample(d, sample);
-			consumption = sample;
-			String st = panel.getPowerArea().getText();
+			if (dummy < 1) {
+				Date d = new Date();
+				double sample = RandomGenerator.getNextConsumptionValue(d);
+				consumption = sample;
+				sample += additiveLoad;
+				info.addSample(d, sample);
+				String st = panel.getPowerArea().getText();
 
-			if (st.split("\n").length < LinePanel.DISPLAYED_VALUES) {
-				st += ("\n" + consumption);
-			} else {
-				st = Double.toString(consumption);
-			}
-			//source = evaulateSwitching();
-			panel.getPowerArea().setText(st);
-			try {
-				Thread.sleep(SLEEP_TIME);
-			} catch (InterruptedException e) {
+				if (st.split("\n").length < LinePanel.DISPLAYED_VALUES) {
+					st += ("\n" + sample);
+				} else {
+					st = Double.toString(sample);
+				}
+				// source = evaulateSwitching();
+				panel.getPowerArea().setText(st);
+				dummy = Integer.MAX_VALUE/8;
+				try {
+					Thread.sleep(SLEEP_TIME);
+				} catch (InterruptedException e) {
 
-				// e.printStackTrace();
-				running = false;
+					// e.printStackTrace();
+					running = false;
+				}
+			}else{
+				dummy--;
 			}
 		}
 	}
@@ -57,25 +63,29 @@ public class LineConsumption implements Runnable {
 		this.source = source;
 	}
 
-//	private boolean evaulateSwitching() {
-//		
-//		return false;
-//	}
+	// private boolean evaulateSwitching() {
+	//
+	// return false;
+	// }
 
 	public void stopThread() {
-		consumption = 0;
 		running = false;
+		consumption = 0;		
 	}
 
 	public double getConsumption() {
-		return consumption;
+		if(running){
+			return consumption + additiveLoad;
+		}else{
+			return 0;
+		}
 	}
-	
-	public boolean getSource(){
+
+	public boolean getSource() {
 		return source;
 	}
-	
-	public InformationSet getInformationSet(){
+
+	public InformationSet getInformationSet() {
 		return info;
 	}
 
@@ -91,24 +101,24 @@ public class LineConsumption implements Runnable {
 		}
 	}
 
-//	public void waitScheduler(Thread master) {
-//		System.out.println("Hello");
-//		try {
-//			master.join();
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//	}
+	// public void waitScheduler(Thread master) {
+	// System.out.println("Hello");
+	// try {
+	// master.join();
+	// } catch (InterruptedException e) {
+	// // TODO Auto-generated catch block
+	// e.printStackTrace();
+	// }
+	// }
 
 	public void source(boolean source) {
-		if(this.source == source) 
+		if (this.source == source)
 			return;
-		else{
+		else {
 			this.source = source;
 			switch_count++;
 		}
-		
+
 	}
 
 	public int getSwitch_count() {

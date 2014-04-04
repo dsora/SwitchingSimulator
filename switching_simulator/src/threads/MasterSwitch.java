@@ -7,9 +7,10 @@ import java.util.List;
 
 public class MasterSwitch implements Runnable {
 
-	private static final long SLEEP_TIME = 500;
+	private static final long SLEEP_TIME = 50;
 	private List<LinePanel> inputList;
-//	private boolean[] result;
+
+	// private boolean[] result;
 
 	@Override
 	public void run() {
@@ -52,20 +53,23 @@ public class MasterSwitch implements Runnable {
 				}
 			}
 			// printMatrix(sol);
-			
-			long step;
+
+			//long step;
 			for (int n = size, w = upper; n > 0; n--) {
 				if (sol[n][w]) {
 					inputList.get(n - 1).source(true);
 					w = w - (int) (Math.ceil(consume[n - 1]));
-										
+
 				} else {
 					inputList.get(n - 1).source(false);
 				}
-				step = System.currentTimeMillis();
-				System.out.println(step-start);
+				//step = System.currentTimeMillis();
 			}
-			System.out.println("Time for operating switching: "+(System.currentTimeMillis()-start));
+			long end = System.currentTimeMillis();
+			if ((end - start) > 0) {
+				System.out.println("Time for operating switching: "
+						+ (System.currentTimeMillis() - start));
+			}
 			try {
 				Thread.sleep(SLEEP_TIME);
 			} catch (InterruptedException e) {
