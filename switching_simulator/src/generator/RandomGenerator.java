@@ -9,16 +9,29 @@ import java.util.HashSet;
 import org.apache.commons.math3.distribution.NormalDistribution;
 
 public class RandomGenerator {
+
+	private static final int RENEWABLE_PREDICTION_MEAN = 200; // mean and
+	private static final double RENEWABLE_PREDICTION_SD = 20; // standard deviation 
+																// of the provided
+																// renewable
+																// energy
+
 	private static final int SAMPLES = 17500; // number of samples.
 												// 1sample/30min = 17520/year
-	private static final int PREDICTIONS = 17500; // number of predictions.
+	private static final int PREDICTIONS = 3600; // number of predictions.
 													// 1prediction/30min =
 													// 17520/year
-	private static final double MEAN = 10.0;// average kWh/day ---> 3650
-											// kWh/year
+	private static final double MEAN = 150;
 	private static final double VARIANCE = 2.0;
 	private static final long HALFHOUR = 30 * 60 * 1000;
-
+	private static final long SECOND = 1000;	
+	private static NormalDistribution renewableDistribution = null;
+	
+	private static final double weight_1 = 0.5;
+	private static final double weight_2 = 0.1;
+	private static final double weight_3 = 0.2;
+	private static final double weight_4 = 0.2;
+	
 	private RandomGenerator() {
 
 	}
@@ -139,7 +152,7 @@ public class RandomGenerator {
 			System.err.println("FILE " + file.toString() + " NOT FOUND");
 			return false;
 		}
-		Long now_msec = new Date().getTime();
+		Long now_msec = System.currentTimeMillis();
 		PrintWriter writer = null;
 		try {
 			writer = new PrintWriter(file);
@@ -150,21 +163,69 @@ public class RandomGenerator {
 		}
 		for (int i = 0; i < PREDICTIONS; i++) {
 			// Date d = new Date(now_msec);
-			double sample = getNextConsumptionValue(new Date(now_msec));
+			double[] sample = getLinesConsumption(new Date(now_msec));
 			if (writer != null) {
-				writer.println(sample + " " + now_msec);// + " "+d.toString());
+				writer.println(now_msec+" "+sample[0] + " "+ sample[1] + " " + sample[2] + " "+ sample[3]);
 			} else {
 				System.err.println("NULL WRITER");
 				return false;
 			}
-			now_msec += HALFHOUR;
+			now_msec += SECOND;
 		}
 		writer.close();
 		return true;
 	}
 
 	public static double getRenewableProvided() {
-		// TODO Auto-generated method stub
-		return 29.78;
+
+		if (renewableDistribution == null) {
+			renewableDistribution = new NormalDistribution(
+					RENEWABLE_PREDICTION_MEAN, RENEWABLE_PREDICTION_SD);
+		}
+		return renewableDistribution.sample();
+	}
+
+	public static double getRenewablePredicted() {
+
+		return 200;
+	}
+	
+	public static double[] getLinesConsumption(Date d){
+		
+		String[] date = d.toString().split(" ");
+		String[] hhmmss = date[3].split(":");
+		
+		double mean;
+		double variance = 0;
+		int h = Integer.parseInt(hhmmss[0]);
+		if (h >= 0 && h < 8) {
+			// CASE: night
+			variance = 2;
+		} else if (h >= 8 && h < 14) {
+			// CASE: morning
+			variance = 3;
+		} else if (h >= 14 && h < 19) {
+			// CASE: afternoon
+			variance = 2;
+		} else if (h >= 19 && h < 24) {
+			// CASE: evening
+			variance = 3;
+		}
+		
+		mean = new NormalDistribution(MEAN,variance).sample();
+		
+		double[] ret = new double[4];
+		ret[0] = weight_1*mean;
+		ret[1] = weight_2*mean;
+		ret[2] = weight_3*mean;
+		ret[3] = weight_4*mean;
+		return ret;
+	}
+	
+	public static double getOnlineLineConsumption(Date d, int id){
+		if(id < 0 || id > 3)
+			return -1;
+		double[] ret = getLinesConsumption(d);
+		return ret[id];
 	}
 }

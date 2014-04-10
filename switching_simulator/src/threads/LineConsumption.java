@@ -8,7 +8,7 @@ import java.util.Date;
 import utils.InformationSet;
 
 public class LineConsumption implements Runnable {
-	private final long SLEEP_TIME = 1;
+	private final long SLEEP_TIME = 10000;
 	private volatile InformationSet info;
 	private volatile boolean running = false;
 	private volatile double consumption = 0;
@@ -16,7 +16,7 @@ public class LineConsumption implements Runnable {
 	private volatile int switch_count = 0;
 	private LinePanel panel;
 	private volatile double additiveLoad;
-	private volatile int dummy = 0;
+	//private volatile int dummy = 0;
 
 	public LineConsumption(InformationSet info, LinePanel panel) {
 		this.info = info;
@@ -28,11 +28,11 @@ public class LineConsumption implements Runnable {
 	public void run() {
 
 		running = true;
-		dummy = 0;
+		//dummy = 0;
 		while (running) {
-			if (dummy < 1) {
+			//if (dummy < 1) {
 				Date d = new Date();
-				double sample = RandomGenerator.getNextConsumptionValue(d);
+				double sample = RandomGenerator.getOnlineLineConsumption(d, info.getId()-1);
 				consumption = sample;
 				sample += additiveLoad;
 				info.addSample(d, sample);
@@ -45,7 +45,7 @@ public class LineConsumption implements Runnable {
 				}
 				// source = evaulateSwitching();
 				panel.getPowerArea().setText(st);
-				dummy = Integer.MAX_VALUE/8;
+				//dummy = Integer.MAX_VALUE/8;
 				try {
 					Thread.sleep(SLEEP_TIME);
 				} catch (InterruptedException e) {
@@ -53,9 +53,9 @@ public class LineConsumption implements Runnable {
 					// e.printStackTrace();
 					running = false;
 				}
-			}else{
-				dummy--;
-			}
+//			}else{
+//				dummy--;
+//			}
 		}
 	}
 
@@ -117,8 +117,12 @@ public class LineConsumption implements Runnable {
 		else {
 			this.source = source;
 			switch_count++;
+			info.incTotalSwitches();
 		}
-
+	}
+	
+	public void incWrong(){
+		info.incWrongSwitches();
 	}
 
 	public int getSwitch_count() {
@@ -127,5 +131,9 @@ public class LineConsumption implements Runnable {
 
 	public void setSwitch_count(int switch_count) {
 		this.switch_count = switch_count;
+	}
+	
+	public void saving(double save){
+		info.incSave(save);
 	}
 }

@@ -17,7 +17,8 @@ public class Tools {
 	
 	public static InformationSet loadFile(String folder, String name) throws FileNotFoundException{
 		
-		InformationSet result = new InformationSet();
+		int id = Integer.parseInt(""+(folder.charAt(4)));
+		InformationSet result = new InformationSet(id);
 		File file = new File("Data"+File.separator+folder+File.separator+name);
 		if(!file.exists()){
 			throw new FileNotFoundException("Missing specified input file");
