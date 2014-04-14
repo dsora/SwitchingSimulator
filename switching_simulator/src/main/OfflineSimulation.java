@@ -1,6 +1,7 @@
 package main;
 
 import generator.RandomGenerator;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -12,9 +13,9 @@ import java.util.Date;
 public class OfflineSimulation {
 
 	private final static int ITERATIONS = 60 * 60 * 24;
-	private final static double[] LOADS = { 0, 0, 0, 50, 0, 0, 0, 100, 0, 0, 0,
-			300, 0, 0, 0, 1000, 0, 0, 0, 0 };
-	private final static double PRODUCT = 20000;
+	private static double[] FREQUENT_LOADS = null;
+	private static double[] SPARSE_LOADS = null;
+	private final static double PRODUCT = 30000;
 	private final static String INPUT_FOLDER = "OfflineInput";
 	private final static String INPUT_FILE = "DailyInfo.txt";
 	private final static String OUTPUT_FOLDER = System.getProperty("user.home")
@@ -22,7 +23,6 @@ public class OfflineSimulation {
 	private final static String OUTPUT_FILE = "DailyInfoAnalysis.";
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
 		try {
 			createInput();
 		} catch (IOException e) {
@@ -46,17 +46,19 @@ public class OfflineSimulation {
 			if (!output.exists()) {
 				try {
 					output.createNewFile();
-					br = new BufferedReader(new FileReader(new File(INPUT_FOLDER
-							+ File.separator + INPUT_FILE)));
-					inLine = br.readLine();
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 			
 			try {
+				br = new BufferedReader(new FileReader(new File(INPUT_FOLDER
+						+ File.separator + INPUT_FILE)));
+				inLine = br.readLine();
 				outputWriter = new PrintWriter(output);
 			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 
@@ -115,6 +117,8 @@ public class OfflineSimulation {
 //			}
 			outputWriter.println(saved);
 			percentage -= 0.2;
+			if(percentage < 0)
+				percentage=0.01;
 			outputWriter.close();		
 			try {
 				br.close();
@@ -185,16 +189,21 @@ public class OfflineSimulation {
 		for (int i = 0; i < ITERATIONS; i++) {
 			for (int j = 0; j < loads.length; j++) {
 				if (temp[j] <= 0) {
-					temp[j] = getRandomLoad();
+					temp[j] = getRandomLoad(time);
 					loads[j] = temp[j];
 					sub[j] = (loads[j] * loads[j]) / PRODUCT;
 				} else {
 					temp[j] -= sub[j];
 				}
 			}
+			Date d = new Date(time);
 			double[] consumptions = RandomGenerator
-					.getLinesConsumption(new Date(time));
-			String toPrint = "" + (time - start) / 1000 + " ";
+					.getLinesConsumption(d);
+			String[] date = d.toString().split(" ");
+			
+//			(time - start) / 1000
+			
+			String toPrint = "" + time + " ";
 			for (int j = 0; j < loads.length; j++) {
 				toPrint += (consumptions[j] + loads[j]) + " ";
 			}
@@ -206,8 +215,51 @@ public class OfflineSimulation {
 		wr.close();
 	}
 
-	private static double getRandomLoad() {
-		int index = ((int) (Math.random() * LOADS.length));
-		return LOADS[index];
+	private static double getRandomLoad(long time) {
+		if(SPARSE_LOADS==null){
+			SPARSE_LOADS = new double[20000];
+			SPARSE_LOADS[0] = 50;
+			SPARSE_LOADS[50] = 100;
+			SPARSE_LOADS[100] = 300;
+			SPARSE_LOADS[150] = 1000;
+//			for(int i = 0; i < SPARSE_LOADS.length; i++){
+//				if(i%(SPARSE_LOADS.length/4) != 0)
+//					SPARSE_LOADS[i] = 0;
+//			}
+			
+		}
+		if(FREQUENT_LOADS==null){
+			FREQUENT_LOADS = new double[2000];
+			FREQUENT_LOADS[0] = 50;
+			FREQUENT_LOADS[50] = 100;
+			FREQUENT_LOADS[100] = 300;
+			FREQUENT_LOADS[150] = 1000;
+//			for(int i = 0; i < SPARSE_LOADS.length; i++){
+//				if(i%(SPARSE_LOADS.length/4) != 0)
+//					SPARSE_LOADS[i] = 0;
+//			}
+		}
+		double[] loads = null;
+		Date d = new Date(time);
+		String[] date = d.toString().split(" ");
+		String[] hhmmss = date[3].split(":");
+		int h = Integer.parseInt(hhmmss[0]);
+		if((h>=0 && h <= 7) || (h>=8 && h <= 16)){
+			loads = SPARSE_LOADS;
+		}else{
+			loads = FREQUENT_LOADS;
+		}
+		
+		int index = ((int) (Math.random() * loads.length));
+//		System.out.println(loads[index]);
+		System.out.println(index);
+		return loads[index];
 	}
+	
+//	private static void printArray(double[] x){
+//		for (double d : x) {
+//			System.out.print(d+"\t");
+//		}
+//		System.out.println();
+//	}
 }
