@@ -18,9 +18,9 @@ public class OfflineSimulation {
 	private final static double PRODUCT = 30000;
 	private final static String INPUT_FOLDER = "OfflineInput";
 	private final static String INPUT_FILE = "DailyInfo.txt";
-	private final static String OUTPUT_FOLDER = System.getProperty("user.home")
-			+ File.separator + "OfflineOutput";
+	private final static String OUTPUT_FOLDER = "OfflineOutput";
 	private final static String OUTPUT_FILE = "DailyInfoAnalysis.";
+	private static final double WStoKWH = 3600*1000;
 
 	public static void main(String[] args) {
 		try {
@@ -42,7 +42,7 @@ public class OfflineSimulation {
 		for (int i = 0; i < 5; i++) {
 			
 
-			output = new File(OUTPUT_FOLDER + File.separator + OUTPUT_FILE+percentage+".txt");
+			output = new File(OUTPUT_FOLDER + File.separator + OUTPUT_FILE+(int)(percentage*100)+".txt");
 			if (!output.exists()) {
 				try {
 					output.createNewFile();
@@ -82,10 +82,16 @@ public class OfflineSimulation {
 				}
 				boolean[] resultReal = computeSwitch(real, consumptions);
 				boolean[] resultIdeal = computeSwitch(ideal, consumptions);
+				double consumed = 0;
 				for (int j = 0; j < resultReal.length; j++) {
-					if (!resultIdeal[j] && resultReal[j] && !old[j]) {
+					if(resultReal[j]) 
+						consumed += consumptions[j]; 
+				}
+				for (int j = 0; j < resultReal.length; j++) {
+					if (((!resultIdeal[j]) && resultReal[j]) && (!old[j]) && consumed > ideal) {
 						wrongCount++;
 					}
+					
 					if (resultReal[j] != old[j]) {
 						switchCount++;
 					}
@@ -100,17 +106,17 @@ public class OfflineSimulation {
 					e.printStackTrace();
 				}
 			}
-			outputWriter.println("Percentage renewable used: " + (percentage*100) +"%"+
+			outputWriter.println("Percentage renewable used: " + (int)(percentage*100) +"%"+
 					"\nTotal switches: "+switchCount+
 					"\nTotal errors: "+wrongCount+
 					"\nSaved energy: ");
 			String saved = "";
 			double sum = 0;
 			for(int j = 0; j < savedEnegy.length; j++){
-				saved += "Line"+j+": "+savedEnegy[j]+"\t";
+				saved += "Line"+j+": "+savedEnegy[j]/WStoKWH+"\t";
 				sum += savedEnegy[j];
 			}
-			saved+="\nTot: "+sum;
+			saved+="\nTot: "+sum/WStoKWH;
 //			saved+="\n";
 //			for(int j = 0; j < savedEnegy.length; j++){
 //				saved += savedEnegy[j]+"\t";
