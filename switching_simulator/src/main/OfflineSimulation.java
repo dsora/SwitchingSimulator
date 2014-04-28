@@ -21,6 +21,7 @@ public class OfflineSimulation {
 	private final static String OUTPUT_FOLDER = "OfflineOutput";
 	private final static String OUTPUT_FILE = "DailyInfoAnalysis.";
 	private static final double WStoKWH = 3600*1000;
+	private static final double TO_EURO = 0.16*60;
 
 	public static void main(String[] args) {
 		try {
@@ -41,7 +42,6 @@ public class OfflineSimulation {
 				
 		for (int i = 0; i < 5; i++) {
 			
-
 			output = new File(OUTPUT_FOLDER + File.separator + OUTPUT_FILE+(int)(percentage*100)+".txt");
 			if (!output.exists()) {
 				try {
@@ -61,7 +61,7 @@ public class OfflineSimulation {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-
+			double[] totalEnergy = new double[4];
 			double[] savedEnegy = new double[4];
 			for (int j = 0; j < savedEnegy.length; j++) {
 				savedEnegy[j] = 0;
@@ -69,37 +69,63 @@ public class OfflineSimulation {
 			boolean[] old = new boolean[4];
 			int switchCount = 0;
 			int wrongCount = 0;
+			boolean[] resultReal = new boolean[4];
+//			boolean[] resultIdeal = new boolean[4];
+			double real = 0;
 			while (inLine != null) {
 				String[] data = inLine.split(" ");
 				double ideal = Double.parseDouble(data[6]); // real consumption ---> ideal environment
-				double real = Double.parseDouble(data[5]); // predicted ---> real environment
+				//double real = Double.parseDouble(data[5]); // predicted ---> real environment
 															// consumption
 				real *= percentage;
-
+				double consumed = 0;
 				double[] consumptions = new double[4];
 				for (int j = 1; j <= consumptions.length; j++) {
 					consumptions[j - 1] = Double.parseDouble(data[j]);
+					if(resultReal[j-1]) 
+						consumed += consumptions[j-1];
 				}
-				boolean[] resultReal = computeSwitch(real, consumptions);
-				boolean[] resultIdeal = computeSwitch(ideal, consumptions);
-				double consumed = 0;
-				for (int j = 0; j < resultReal.length; j++) {
-					if(resultReal[j]) 
-						consumed += consumptions[j]; 
-				}
-				for (int j = 0; j < resultReal.length; j++) {
-					if (((!resultIdeal[j]) && resultReal[j]) && (!old[j]) && consumed > ideal) {
-						wrongCount++;
+				
+				if(consumed > ideal){
+					//CASE: ERROR
+					for (int j = 0; j < resultReal.length; j++) {
+						
+						totalEnergy[j] += consumptions[j]; //consumption total for line
+						
+						//TO DELETE
+						if(resultReal[j]){
+							savedEnegy[j] += consumptions[j]; //saved energy for line
+						}
+						//
+						
+						if(resultReal[j] && !old[j]){//Errors count
+							wrongCount++;
+						}
+						if (resultReal[j] != old[j]) {// total switches count
+							switchCount++;
+						}
 					}
 					
-					if (resultReal[j] != old[j]) {
-						switchCount++;
+					old = resultReal;
+					resultReal = new boolean[4]; //emergency recovery: all lines on the wires
+					
+				}else{
+					for (int j = 0; j < resultReal.length; j++) {
+						
+						totalEnergy[j] += consumptions[j]; //consumption total for line
+						
+						if(resultReal[j]){
+							savedEnegy[j] += consumptions[j]; //saved energy for line
+						}
+						
+						if (resultReal[j] != old[j]) {// total switches count
+							switchCount++;
+						}
 					}
-					if (resultReal[j]) {
-						savedEnegy[j] += consumptions[j];
-					}
+					old = resultReal;
+					resultReal = computeSwitch(real, consumptions);
 				}
-				old = resultReal;
+				real = Double.parseDouble(data[5]);
 				try {
 					inLine= br.readLine();
 				} catch (IOException e) {
@@ -109,14 +135,27 @@ public class OfflineSimulation {
 			outputWriter.println("Percentage renewable used: " + (int)(percentage*100) +"%"+
 					"\nTotal switches: "+switchCount+
 					"\nTotal errors: "+wrongCount+
-					"\nSaved energy: ");
+					"\nError Percent: "+(double)((double)wrongCount/(double)switchCount)*100+
+					"\nSaved energy per Line: ");
 			String saved = "";
 			double sum = 0;
+			double totEn = 0;
 			for(int j = 0; j < savedEnegy.length; j++){
 				saved += "Line"+j+": "+savedEnegy[j]/WStoKWH+"\t";
 				sum += savedEnegy[j];
+				totEn += totalEnergy[j];
 			}
-			saved+="\nTot: "+sum/WStoKWH;
+			saved+="\nTotal per Line:\n";
+			for(int j = 0; j < totalEnergy.length; j++){
+				saved += "Line"+j+": "+totalEnergy[j]/WStoKWH+"\t";
+				sum += savedEnegy[j];
+				totEn += totalEnergy[j];
+			}
+			saved+="\nTot Saved: "+sum/WStoKWH;
+			saved+="\nTot Consumed: "+totEn/WStoKWH;
+			saved+="\n"+(sum/totEn)*100+"%";
+			saved+="\nSaved Euro: "+(sum/WStoKWH)*TO_EURO;
+			saved+="\nTotal Euro: "+(totEn/WStoKWH)*TO_EURO;
 //			saved+="\n";
 //			for(int j = 0; j < savedEnegy.length; j++){
 //				saved += savedEnegy[j]+"\t";
