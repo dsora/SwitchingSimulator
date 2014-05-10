@@ -163,7 +163,7 @@ public class RandomGenerator {
 		}
 		for (int i = 0; i < PREDICTIONS; i++) {
 			// Date d = new Date(now_msec);
-			double[] sample = getLinesConsumption(new Date(now_msec));
+			double[] sample = getLinesConsumption(new Date(now_msec),0);
 			if (writer != null) {
 				writer.println(now_msec+" "+sample[0] + " "+ sample[1] + " " + sample[2] + " "+ sample[3]);
 			} else {
@@ -190,29 +190,29 @@ public class RandomGenerator {
 		return 200;
 	}
 	
-	public static double[] getLinesConsumption(Date d){
+	public static double[] getLinesConsumption(Date d, double stdDev){
 		
 		String[] date = d.toString().split(" ");
 		String[] hhmmss = date[3].split(":");
 		
 		double mean;
-		double variance = 0;
+		//double variance = 0;
 		int h = Integer.parseInt(hhmmss[0]);
 		if (h >= 0 && h < 8) {
 			// CASE: night
-			variance = 2;
+			stdDev += 0.5;
 		} else if (h >= 8 && h < 14) {
 			// CASE: morning
-			variance = 3;
+			stdDev += 1;
 		} else if (h >= 14 && h < 19) {
 			// CASE: afternoon
-			variance = 2;
+			stdDev += 0.7;
 		} else if (h >= 19 && h < 24) {
 			// CASE: evening
-			variance = 3;
+			stdDev += 1;
 		}
 		
-		mean = new NormalDistribution(MEAN,variance).sample();
+		mean = new NormalDistribution(MEAN,stdDev).sample();
 		
 		double[] ret = new double[4];
 		ret[0] = weight_1*mean;
@@ -225,7 +225,7 @@ public class RandomGenerator {
 	public static double getOnlineLineConsumption(Date d, int id){
 		if(id < 0 || id > 3)
 			return -1;
-		double[] ret = getLinesConsumption(d);
+		double[] ret = getLinesConsumption(d,0);
 		return ret[id];
 	}
 }
