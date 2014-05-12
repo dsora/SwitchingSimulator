@@ -233,7 +233,7 @@ public class OfflineSimulation {
 				double kwhSaved = sum / WStoKWH;
 				saved += "\nTot Saved: " + kwhSaved;
 				saved += "\nTot Consumed: " + kwhTot;
-				saved += "\n" + (sum / totEn) * 100 + "%";
+				saved += "\nPercent saved: " + (sum / totEn) * 100 + "%";
 				saved += "\nSaved Euro: " + kwhSaved * TO_EURO;
 				saved += "\nTotal Euro: " + kwhTot * TO_EURO;
 				saved += "\nSystem initial cost:\t" + INITIAL_COST + "Euro";
