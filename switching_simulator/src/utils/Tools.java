@@ -36,10 +36,313 @@ public class Tools {
 			br.close();
 			return result;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		} 
 	}
+	
+	public static boolean[] computeSwitch(double renewable, double[] consume) {
+		int size = consume.length;
+		int upper = (int) renewable;
+		boolean[] ret = new boolean[size];
+		double[][] opt = new double[size + 1][upper + 1];
+		// printMatrix(opt);
+		boolean[][] sol = new boolean[size + 1][upper + 1];
+		// printMatrix(sol);
+		for (int n = 1; n <= size; n++) {
+			for (int w = 1; w <= upper; w++) {
+				// Hp1: Don't activate it
+				double option1 = opt[n - 1][w];
+				// Hp2: Activate it
+				double option2 = -1;
+				int augmentedConsumption = (int) (Math.ceil(consume[n - 1]));
+				if (augmentedConsumption <= w && augmentedConsumption >= 0)
+					option2 = consume[n - 1]
+							+ opt[n - 1][(w - augmentedConsumption)];
 
+				// which better?
+				opt[n][w] = Math.max(option1, option2);
+				sol[n][w] = (option2 >= option1);
+			}
+		}
+		// printMatrix(sol);
+
+		// long step;
+		for (int n = size, w = upper; n > 0; n--) {
+			if (sol[n][w]) {
+				ret[n - 1] = true;
+				w = w - (int) (Math.ceil(consume[n - 1]));
+
+			} else {
+				ret[n - 1] = false;
+			}
+			// step = System.currentTimeMillis();
+		}
+
+		return ret;
+	}
+	
+	public static boolean[] computeAdaptativeSwitch(double ren, double[] consume,
+			double[] variances) {
+		
+		//SIDE EFFECT ON CONSUME!!!
+		int size = consume.length;
+		
+		double[] percents = new double[100];
+		double perc = 0;
+		for (int i = 0; i < percents.length; i++) {
+			perc += 0.8;
+			percents[i] = perc / 100.0;
+		}
+		int div = 0;
+		double tot = 0;
+		double max = 0;
+		boolean[] filter = new boolean[size];
+		for (int i = 0; i < variances.length; i++) {
+			if (variances[i] / 150 > 1) {
+				consume[i] = 0;
+				filter[i] = false;
+			} else {
+				if(variances[i] > max){
+					max = variances[i];
+				}
+				tot += (variances[i]);
+				div++;
+				filter[i] = true;
+			}
+		}
+
+		double renewable = percents[99 - ((int) (tot / (div * 1.5)))] * ren;
+//		double renewable = percents[99 - ((int) ( max / 2))] * ren;
+		int upper = (int) renewable;
+		boolean[] ret = new boolean[size];
+		double[][] opt = new double[size + 1][upper + 1];
+		// printMatrix(opt);
+
+		boolean[][] sol = new boolean[size + 1][upper + 1];
+		// printMatrix(sol);
+		for (int n = 1; n <= size; n++) {
+			for (int w = 1; w <= upper; w++) {
+				// Hp1: Don't activate it
+				double option1 = opt[n - 1][w];
+				// Hp2: Activate it
+				double option2 = -1;
+				int augmentedConsumption = (int) (Math.ceil(consume[n - 1]));
+				if (augmentedConsumption <= w && augmentedConsumption >= 0)
+					option2 = consume[n - 1]
+							+ opt[n - 1][(w - augmentedConsumption)];
+
+				// which better?
+				opt[n][w] = Math.max(option1, option2);
+				sol[n][w] = (option2 >= option1);
+			}
+		}
+		// printMatrix(sol);
+
+		// long step;
+		for (int n = size, w = upper; n > 0; n--) {
+			if (sol[n][w]) {
+				ret[n - 1] = true;
+				w = w - (int) (Math.ceil(consume[n - 1]));
+
+			} else {
+				ret[n - 1] = false;
+			}
+			// step = System.currentTimeMillis();
+		}
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = filter[i] && ret[i];
+		}
+		return ret;
+	}
+	
+	public static boolean[] computeAdaptativeSwitch(double ren, double[] consume,
+			double[] variances,double[] means) {
+		
+		//SIDE EFFECT ON CONSUME!!!
+		int size = consume.length;
+		
+		double[] percents = new double[100];
+		double perc = 0;
+		for (int i = 0; i < percents.length; i++) {
+			perc += 0.5;
+			percents[i] = perc / 100.0;
+		}
+		int div = 0;
+		double tot = 0;
+		double max = 0;
+		boolean[] filter = new boolean[size];
+		for (int i = 0; i < variances.length; i++) {
+			if (variances[i] / means[i] > 20) {
+				consume[i] = 0;
+				filter[i] = false;
+			} else {
+				if(variances[i] > max){
+					max = variances[i];
+				}
+				tot += (variances[i]/means[i]);
+				div++;
+				filter[i] = true;
+			}
+		}
+		
+		double renewable = percents[99 -(int)((tot/div)*4) ] * ren;
+//		double renewable = percents[99 - ((int) (tot / (div * 1.5)))] * ren;
+//		double renewable = percents[99 - ((int) ( max / 2))] * ren;
+		int upper = (int) renewable;
+		boolean[] ret = new boolean[size];
+		double[][] opt = new double[size + 1][upper + 1];
+		// printMatrix(opt);
+
+		boolean[][] sol = new boolean[size + 1][upper + 1];
+		// printMatrix(sol);
+		for (int n = 1; n <= size; n++) {
+			for (int w = 1; w <= upper; w++) {
+				// Hp1: Don't activate it
+				double option1 = opt[n - 1][w];
+				// Hp2: Activate it
+				double option2 = -1;
+				int augmentedConsumption = (int) (Math.ceil(consume[n - 1]));
+				if (augmentedConsumption <= w && augmentedConsumption >= 0)
+					option2 = consume[n - 1]
+							+ opt[n - 1][(w - augmentedConsumption)];
+
+				// which better?
+				opt[n][w] = Math.max(option1, option2);
+				sol[n][w] = (option2 >= option1);
+			}
+		}
+		// printMatrix(sol);
+
+		// long step;
+		for (int n = size, w = upper; n > 0; n--) {
+			if (sol[n][w]) {
+				ret[n - 1] = true;
+				w = w - (int) (Math.ceil(consume[n - 1]));
+
+			} else {
+				ret[n - 1] = false;
+			}
+			// step = System.currentTimeMillis();
+		}
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = filter[i] && ret[i];
+		}
+		return ret;
+	}
+
+	public static boolean[] computeSwitch(double renewable, double[] consume,
+			double[] variances) {
+		
+		//SIDE EFFECT ON CONSUME!!!
+		int size = consume.length;
+		
+		boolean[] filter = new boolean[size];
+		for (int i = 0; i < variances.length; i++) {
+			if (variances[i] / 150 > 1) {
+				consume[i] = 0;
+				filter[i] = false;
+			} else {
+				filter[i] = true;
+			}
+		}
+		
+		int upper = (int) renewable;
+		boolean[] ret = new boolean[size];
+		double[][] opt = new double[size + 1][upper + 1];
+		// printMatrix(opt);
+
+		boolean[][] sol = new boolean[size + 1][upper + 1];
+		// printMatrix(sol);
+		for (int n = 1; n <= size; n++) {
+			for (int w = 1; w <= upper; w++) {
+				// Hp1: Don't activate it
+				double option1 = opt[n - 1][w];
+				// Hp2: Activate it
+				double option2 = -1;
+				int augmentedConsumption = (int) (Math.ceil(consume[n - 1]));
+				if (augmentedConsumption <= w && augmentedConsumption >= 0)
+					option2 = consume[n - 1]
+							+ opt[n - 1][(w - augmentedConsumption)];
+
+				// which better?
+				opt[n][w] = Math.max(option1, option2);
+				sol[n][w] = (option2 >= option1);
+			}
+		}
+		// printMatrix(sol);
+
+		// long step;
+		for (int n = size, w = upper; n > 0; n--) {
+			if (sol[n][w]) {
+				ret[n - 1] = true;
+				w = w - (int) (Math.ceil(consume[n - 1]));
+
+			} else {
+				ret[n - 1] = false;
+			}
+			// step = System.currentTimeMillis();
+		}
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = filter[i] && ret[i];
+		}
+		return ret;
+	}
+
+	public static boolean[] computeSwitch(double renewable, double[] consume,
+			double[] variances, double[] means) {
+		
+		//SIDE EFFECT ON CONSUME!!!
+		int size = consume.length;
+		boolean[] filter = new boolean[size];
+		for (int i = 0; i < variances.length; i++) {
+			if (variances[i] / means[i] > 20) {
+				consume[i] = 0;
+				filter[i] = false;
+			} else {
+				filter[i] = true;
+			}
+		}
+		int upper = (int) renewable;
+		boolean[] ret = new boolean[size];
+		double[][] opt = new double[size + 1][upper + 1];
+		// printMatrix(opt);
+
+		boolean[][] sol = new boolean[size + 1][upper + 1];
+		// printMatrix(sol);
+		for (int n = 1; n <= size; n++) {
+			for (int w = 1; w <= upper; w++) {
+				// Hp1: Don't activate it
+				double option1 = opt[n - 1][w];
+				// Hp2: Activate it
+				double option2 = -1;
+				int augmentedConsumption = (int) (Math.ceil(consume[n - 1]));
+				if (augmentedConsumption <= w && augmentedConsumption >= 0)
+					option2 = consume[n - 1]
+							+ opt[n - 1][(w - augmentedConsumption)];
+
+				// which better?
+				opt[n][w] = Math.max(option1, option2);
+				sol[n][w] = (option2 >= option1);
+			}
+		}
+		// printMatrix(sol);
+
+		// long step;
+		for (int n = size, w = upper; n > 0; n--) {
+			if (sol[n][w]) {
+				ret[n - 1] = true;
+				w = w - (int) (Math.ceil(consume[n - 1]));
+
+			} else {
+				ret[n - 1] = false;
+			}
+			// step = System.currentTimeMillis();
+		}
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = filter[i] && ret[i];
+		}
+		return ret;
+	}
+	
 }
