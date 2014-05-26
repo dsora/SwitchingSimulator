@@ -1,15 +1,19 @@
 package main;
 
 import generator.RandomGenerator;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
 import java.util.Date;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import utils.EnergyPair;
 import utils.Tools;
 
 public class OfflineSimulation {
@@ -17,7 +21,9 @@ public class OfflineSimulation {
 	private final static int ITERATIONS = 60 * 60 * 24;
 	private static double[] FREQUENT_LOADS = null;
 	private static double[] SPARSE_LOADS = null;
-	private static double[] vars = { 0, 10, 20, 30, 40 };
+//	private static double[] vars = { 0, 10, 20, 30, 40 }; //FOR SIMULATED DATA TESTING
+	private static double[] vars = { 0 }; //FOR REAL DATA TESTING
+	private static String REAL_INPUT_FILE = "RealData.txt";
 	// private static double[] percents;
 	private final static double PRODUCT = 30000;
 	private final static String INPUT_FOLDER = "OfflineInput";
@@ -32,10 +38,12 @@ public class OfflineSimulation {
 	private static final String STDDEV = "StdDev_";
 
 	private static final int TIME_SLOTS = 24;
+	private static final int N_LINES = 4;
 
 	public static void main(String[] args) {
 		try {
-			createInput();
+//			createSimulatedInput();
+			createInputFromRealData();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -70,6 +78,7 @@ public class OfflineSimulation {
 					File input = new File(INPUT_FOLDER + File.separator
 							+ STDDEV + stdDev + File.separator + INPUT_FILE
 							+ TXT);
+					boolean stop = false;
 					try {
 
 						br = new BufferedReader(new FileReader(input));
@@ -129,16 +138,16 @@ public class OfflineSimulation {
 						String[] date = d.toString().split(" ");
 						String[] hhmmss = date[3].split(":");
 						int h = Integer.parseInt(hhmmss[0]);
-						int mm = Integer.parseInt(hhmmss[1]);
+//						int mm = Integer.parseInt(hhmmss[1]);
 						// System.out.println(h/6);
 						// double[] means = means_matrix[h/6];
 						// double[] variances = variances_matrix[h/6];
 						// double[] m2_s = m2_s_matrix[h/6];
-						
-//						if (TIME_SLOTS == 48 && mm >= 30) {
-//							//case 1/2 hour
-//							h = (TIME_SLOTS / 2) + h;
-//						}
+
+						// if (TIME_SLOTS == 48 && mm >= 30) {
+						// //case 1/2 hour
+						// h = (TIME_SLOTS / 2) + h;
+						// }
 
 						double consumed = 0;
 						double[] consumptions = new double[4];
@@ -227,20 +236,22 @@ public class OfflineSimulation {
 								// TEST2:
 								real *= percentage;
 								resultReal = Tools.computeSwitch(real,
-										consumptions.clone(), variances_matrix[h]);
+										consumptions.clone(),
+										variances_matrix[h]);
 								break;
 							case 3:
 								// TEST3:
 								real *= percentage;
 								resultReal = Tools.computeSwitch(real,
-										consumptions.clone(), variances_matrix[h],
-										means_matrix[h]);
+										consumptions.clone(),
+										variances_matrix[h], means_matrix[h]);
 								break;
 							case 4:
 								// TEST4:
 								resultReal = Tools.computeAdaptativeSwitch(
 										real, consumptions.clone(),
 										variances_matrix[h]);
+								stop = true;
 								break;
 							case 5:
 
@@ -248,6 +259,7 @@ public class OfflineSimulation {
 								resultReal = Tools.computeAdaptativeSwitch(
 										real, consumptions.clone(),
 										variances_matrix[h], means_matrix[h]);
+								stop = true;
 								break;
 							}
 						}
@@ -325,12 +337,16 @@ public class OfflineSimulation {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					
+					if(stop){
+						break;
+					}
 				}
 			}
 		}
 	}
 
-	private static void createInput() throws IOException {
+	private static void createSimulatedInput() throws IOException {
 		File folder = new File(INPUT_FOLDER);
 		if (!folder.exists()) {
 			folder.mkdir();
@@ -349,9 +365,9 @@ public class OfflineSimulation {
 			} else
 				return;
 
-			double[] loads = new double[4];
-			double[] sub = new double[4];
-			double[] temp = new double[4];
+			double[] loads = new double[N_LINES];
+			double[] sub = new double[N_LINES];
+			double[] temp = new double[N_LINES];
 			long time = System.currentTimeMillis();
 			// long start = time;
 			PrintWriter wr = new PrintWriter(input);
@@ -427,13 +443,6 @@ public class OfflineSimulation {
 		return loads[index];
 	}
 
-	// private static void printArray(double[] x){
-	// for (double d : x) {
-	// System.out.print(d+"\t");
-	// }
-	// System.out.println();
-	// }
-
 	public static void getHistory(File input, double[][] variances_matrix,
 			long[][] sizes, double[][] means_matrix, double[][] m2_s_matrix) {
 		String inLine = null;
@@ -442,6 +451,7 @@ public class OfflineSimulation {
 		try {
 			br = new BufferedReader(new FileReader(input));
 			inLine = br.readLine();
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
@@ -453,7 +463,7 @@ public class OfflineSimulation {
 
 			// real environment
 			// consumption
-			Date d = new Date(Long.parseLong(data[0]));
+			Date d = new Date(Long.parseLong(data[0].trim()));
 			String[] date = d.toString().split(" ");
 			String[] hhmmss = date[3].split(":");
 			int h = Integer.parseInt(hhmmss[0]);
@@ -464,6 +474,7 @@ public class OfflineSimulation {
 
 			double[] consumptions = new double[4];
 			for (int j = 1; j <= consumptions.length; j++) {
+				
 				consumptions[j - 1] = Double.parseDouble(data[j]);
 
 				// mean and variances update
@@ -486,15 +497,146 @@ public class OfflineSimulation {
 			try {
 				inLine = br.readLine();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 		try {
 			br.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+
+	public static void createInputFromRealData() throws IOException {
+
+		File realFile = new File(REAL_INPUT_FILE);
+		if (!realFile.exists()) {
+			System.err.println("NO REAL DATA FILE");
+			System.exit(1);
+		}
+		
+		File folder = new File(INPUT_FOLDER + File.separator + STDDEV + 0.0);
+		if (!folder.exists()) {
+			folder.mkdirs();
+		}else{
+			return;
+		}
+		
+		File toCreate = new File(folder.getPath() + File.separator + INPUT_FILE
+				+ TXT);
+		if (!toCreate.exists()) {
+			try {
+				toCreate.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		Map<Integer, Map<Integer, EnergyPair>> map = 
+				new HashMap<Integer, Map<Integer, EnergyPair>>();
+		
+		//MAP<CENTRALE,MAP<LINEA,MAP.ENTRY<ARRAY_INDEX,ENERGY_VALUE>>>
+		HashMap<Integer, EnergyPair> map1 = new HashMap<Integer,EnergyPair>();
+		map1.put(3, new EnergyPair(0, 0.0));
+		map1.put(4, new EnergyPair(1, 0.0));
+		HashMap<Integer, EnergyPair> map2 = new HashMap<Integer,EnergyPair>();
+		map2.put(2, new EnergyPair(2, 0.0));
+		map2.put(5, new EnergyPair(3, 0.0));
+	
+		map.put(1,map1);
+		map.put(3, map2);
+		
+		PrintWriter writer = new PrintWriter(new FileWriter(toCreate,true));
+		
+		String line = null;
+		BufferedReader br = null;
+		
+		try {
+			br = new BufferedReader(new FileReader(realFile));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			System.err.println("Real File Not Found");
+			System.exit(1);
+		}
+		
+		long systime = 0L;
+		
+		while((line = br.readLine())!= null){
+			String[] dataLine = line.split(",");
+			if(!dataLine[1].trim().equals("energy")){
+				continue;
+			}
+			long now = Long.parseLong(dataLine[0].trim());
+			
+			if(systime == 0)
+				systime = now;
+//			
+//			while(systime < now){
+//				addLine(writer,systime,map);
+//				systime+= 1000L;
+//			}
+			
+			Integer key1 = new Integer(dataLine[2].trim());
+			Map<Integer,EnergyPair> m = map.get(key1);
+			
+			if(m == null)
+				continue;
+			
+			Integer key2 = new Integer(dataLine[3].trim());
+			EnergyPair pair = m.get(key2);
+			
+			if(pair == null)
+				continue;
+//			if(key2 == 4 && key1 == 3)
+//				System.err.println(dataLine[10].trim());
+			pair.setEnergy(Double.parseDouble(dataLine[10].trim()));
+			m.put(key2, pair);
+			map.put(key1, m);
+			
+			addLine(writer, now, map);
+			
+			systime = now;
+		}
+		Set<Integer> x = map.keySet();
+		for (Integer key : x) {
+			System.out.println(key+":");
+			printMap(map.get(key));
+			System.out.println();
+		}
+		writer.close();
+		br.close();
+	}
+
+	private static void addLine(PrintWriter writer, long systime,
+			Map<Integer, Map<Integer, EnergyPair>> map) {
+		Set<Integer> keys1 = map.keySet();
+		int size = 0;
+		for (Integer key : keys1) {
+			size += map.get(key).size();
+		}
+		
+		double[] consumptions = new double[size];
+		
+		for (Integer key : keys1) {
+			Map<Integer,EnergyPair> m = map.get(key);
+			Collection<EnergyPair> pairs = m.values();
+			for (EnergyPair ep : pairs) {
+				consumptions[ep.getIndex()] = ep.getEnergy();
+			}
+		}
+		String toPrint = "";
+		toPrint += systime+" ";
+		for(int i = 0; i < consumptions.length; i++){
+			toPrint += consumptions[i]+ " ";
+		}
+		toPrint+=RandomGenerator.getRenewablePredicted()+ " "+RandomGenerator.getRenewableProvided();
+		writer.println(toPrint);
+	}
+	
+	private static void printMap(Map<Integer,EnergyPair> x){
+		Set<Integer> keyset = x.keySet();
+		for (Integer key : keyset) {
+			System.out.println(key+" "+x.get(key).getEnergy() + " " + x.get(key).getIndex());
 		}
 	}
 }
