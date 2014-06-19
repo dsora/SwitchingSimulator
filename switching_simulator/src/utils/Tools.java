@@ -10,7 +10,7 @@ import java.io.InputStreamReader;
 import java.util.Date;
 
 public class Tools {
-	private static double PERC_STEP = 0.6;
+	private static double PERC_STEP = 0.4;
 	private Tools(){
 		//Not-instantiable class: only static methods
 	}
@@ -99,7 +99,7 @@ public class Tools {
 		double max = 0;
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / 1000 > 1) {
+			if (variances[i] / 500 > 1) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {
@@ -112,7 +112,7 @@ public class Tools {
 			}
 		}
 
-		double renewable = percents[99 - ((int) (tot / (div * 10)))] * ren;
+		double renewable = percents[99 - ((int) (tot / (div * 5)))] * ren;
 //		double renewable = percents[99 - ((int) ( max / 2))] * ren;
 		int upper = (int) renewable;
 		boolean[] ret = new boolean[size];
@@ -170,23 +170,23 @@ public class Tools {
 		}
 		int div = 0;
 		double tot = 0;
-		double max = 0;
+//		double max = 0;
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / means[i] > 100) {
+			if (variances[i] / means[i] > 50) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {
-				if(variances[i] > max){
-					max = variances[i];
-				}
+//				if(variances[i] > max){
+//					max = variances[i];
+//				}
 				tot += (variances[i]/means[i]);
 				div++;
 				filter[i] = true;
 			}
 		}
 		
-		double renewable = percents[99 -(int)(((tot/div)/10)*9) ] * ren;
+		double renewable = percents[99 -(int)(((tot/div)/5)*9) ] * ren;
 //		double renewable = percents[99 - ((int) (tot / (div * 1.5)))] * ren;
 //		double renewable = percents[99 - ((int) ( max / 2))] * ren;
 		int upper = (int) renewable;
@@ -239,7 +239,7 @@ public class Tools {
 		
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / 1000 > 1) {
+			if (variances[i] / 500 > 1) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {
@@ -296,7 +296,7 @@ public class Tools {
 		int size = consume.length;
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / means[i] > 100) {
+			if (variances[i] / consume[i] > 50) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {
