@@ -10,7 +10,7 @@ import java.io.InputStreamReader;
 import java.util.Date;
 
 public class Tools {
-	private static double PERC_STEP = 0.4;
+	private static double PERC_STEP = 0.6;
 	private Tools(){
 		//Not-instantiable class: only static methods
 	}
@@ -99,7 +99,7 @@ public class Tools {
 		double max = 0;
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / 500 > 1) {
+			if (variances[i] / 5000 > 1) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {
@@ -112,7 +112,7 @@ public class Tools {
 			}
 		}
 
-		double renewable = percents[99 - ((int) (tot / (div * 5)))] * ren;
+		double renewable = percents[99 - ((int) (tot / (div * 50)))] * ren;
 //		double renewable = percents[99 - ((int) ( max / 2))] * ren;
 		int upper = (int) renewable;
 		boolean[] ret = new boolean[size];
@@ -173,7 +173,7 @@ public class Tools {
 //		double max = 0;
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / means[i] > 50) {
+			if (variances[i] / means[i] > 500) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {
@@ -186,7 +186,7 @@ public class Tools {
 			}
 		}
 		
-		double renewable = percents[99 -(int)(((tot/div)/5)*9) ] * ren;
+		double renewable = percents[99 -(int)(((tot/div)/50)*9) ] * ren;
 //		double renewable = percents[99 - ((int) (tot / (div * 1.5)))] * ren;
 //		double renewable = percents[99 - ((int) ( max / 2))] * ren;
 		int upper = (int) renewable;
@@ -239,7 +239,7 @@ public class Tools {
 		
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / 500 > 1) {
+			if (variances[i] / 5000 > 1) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {
@@ -296,7 +296,7 @@ public class Tools {
 		int size = consume.length;
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / consume[i] > 50) {
+			if (variances[i] / consume[i] > 500) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {

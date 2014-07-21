@@ -5,6 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
 
@@ -27,10 +30,13 @@ public class RandomGenerator {
 	private static final long SECOND = 1000;	
 	private static NormalDistribution renewableDistribution = null;
 	
+	private static Iterator<Double> means;
+	
 	private static final double weight_1 = 0.5;
 	private static final double weight_2 = 0.1;
 	private static final double weight_3 = 0.2;
 	private static final double weight_4 = 0.2;
+	
 	
 	private RandomGenerator() {
 
@@ -194,8 +200,8 @@ public class RandomGenerator {
 		
 		String[] date = d.toString().split(" ");
 		String[] hhmmss = date[3].split(":");
+		double mean = 0;
 		
-		double mean;
 		//double variance = 0;
 		int h = Integer.parseInt(hhmmss[0]);
 		if (h >= 0 && h < 8) {
@@ -204,15 +210,26 @@ public class RandomGenerator {
 		} else if (h >= 8 && h < 14) {
 			// CASE: morning
 			stdDev += 1;
+			mean += 50;
 		} else if (h >= 14 && h < 19) {
 			// CASE: afternoon
 			stdDev += 0.7;
 		} else if (h >= 19 && h < 24) {
 			// CASE: evening
 			stdDev += 1;
+			mean += 50;
 		}
 		
-		mean = new NormalDistribution(MEAN,stdDev).sample();
+		if(means == null || !means.hasNext()){
+			double m = new NormalDistribution(MEAN,stdDev).sample();
+			List<Double> means_list = new LinkedList<Double>();
+			for(int i = 0; i < 10; i++){
+				means_list.add(m);
+			}
+			means = means_list.iterator();
+		}
+			
+		mean += means.next();
 		
 		double[] ret = new double[4];
 		ret[0] = weight_1*mean;

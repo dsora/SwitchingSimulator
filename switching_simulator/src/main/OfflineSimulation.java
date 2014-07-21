@@ -23,8 +23,8 @@ public class OfflineSimulation {
 	private static double[] SPARSE_LOADS = null;
 	private static double[] vars = { 0, 10, 20, 30, 40 }; // FOR SIMULATED
 	// DATA TESTING
-	// private static double[] vars = { 0 }; // FOR REAL DATA TESTING
-	private static String REAL_INPUT_FILE = "RealData.txt";
+//	private static double[] vars = { 0 }; // FOR REAL DATA TESTING
+//	private static String REAL_INPUT_FILE = "RealData.txt";
 	// private static double[] percents;
 	private final static double PRODUCT = 30000;
 	private final static String INPUT_FOLDER = "OfflineInput";
@@ -39,18 +39,21 @@ public class OfflineSimulation {
 	private static final long MONTHS_TO_MILLISEC = 1000L * 60L * 60L * 24L
 			* 30L;
 	private static final String STDDEV = "StdDev_";
-//	private static final int[] ts = { 60 * 24 };
+//	 private static final int[] ts = { 60 * 24 };
 	private static final int[] ts = { 24, 48, 30 * 24, 60 * 24 };
-//  private static final int TIME_SLOTS = 30 * 24;
-//  private static final int timeSlots = 48;
+	// private static final int TIME_SLOTS = 30 * 24;
+	// private static final int timeSlots = 48;
 	private static final int N_LINES = 4;
+	private static final int TRAINING_DAYS = 10;
 
 	public static void main(String[] args) {
 		try {
-			createSimulatedConsumption(HISTORY_FOLDER+1);
-			createSimulatedConsumption(HISTORY_FOLDER+2);
-			createSimulatedConsumption(INPUT_FOLDER);
-			// createInputFromRealData();
+			for (int i = 1; i <= TRAINING_DAYS; i++) {
+				createSimulatedConsumption(HISTORY_FOLDER + i);
+			}
+			 createSimulatedConsumption(INPUT_FOLDER);
+//			createInputFromRealData(REAL_INPUT_FILE);
+//			System.exit(0); //FOR TESTING THE SIMULATOR OUTPUT
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -92,14 +95,6 @@ public class OfflineSimulation {
 								+ STDDEV + stdDev + File.separator + INPUT_FILE
 								+ TXT);
 
-						File history = new File(HISTORY_FOLDER+1 + File.separator
-								+ STDDEV + stdDev + File.separator + INPUT_FILE
-								+ TXT);
-						
-						File history2 = new File(HISTORY_FOLDER+2 + File.separator
-								+ STDDEV + stdDev + File.separator + INPUT_FILE
-								+ TXT);
-						
 						boolean stop = false;
 						try {
 
@@ -128,10 +123,27 @@ public class OfflineSimulation {
 						for (int j = 0; j < m2_s_matrix.length; j++) {
 							m2_s_matrix[j] = new double[4];
 						}
-						getHistory(history, variances_matrix, sizes,
-								means_matrix, m2_s_matrix, timeSlots);
-						getHistory(history2, variances_matrix, sizes,
-								means_matrix, m2_s_matrix, timeSlots);
+
+						for (int td = 1; td <= TRAINING_DAYS; td++) {
+							File history = new File(HISTORY_FOLDER + td
+									+ File.separator + STDDEV + stdDev
+									+ File.separator + INPUT_FILE + TXT);
+
+							getHistory(history, variances_matrix, sizes,
+									means_matrix, m2_s_matrix, timeSlots);
+							// File history2 = new File(HISTORY_FOLDER + 2
+							// + File.separator + STDDEV + stdDev
+							// + File.separator + INPUT_FILE + TXT);
+							//
+							// File history3 = new File(HISTORY_FOLDER + 3
+							// + File.separator + STDDEV + stdDev
+							// + File.separator + INPUT_FILE + TXT);
+						}
+
+						// getHistory(history2, variances_matrix, sizes,
+						// means_matrix, m2_s_matrix, timeSlots);
+						// getHistory(history3, variances_matrix, sizes,
+						// means_matrix, m2_s_matrix, timeSlots);
 
 						double[] totalEnergy = new double[4];
 						double[] savedEnegy = new double[4];
@@ -175,16 +187,16 @@ public class OfflineSimulation {
 									h = (timeSlots / 2) + h;
 								}
 							} else if (timeSlots == 30 * 24) {
-//								// TIME SLOTS == 30 * 24
-//								if (mm % 2 != 0) {
-//									h = (h * 30) + mm / 2;
-//								} else {
-//									h = (h * 30) + mm;
-//								}
+								// // TIME SLOTS == 30 * 24
+								// if (mm % 2 != 0) {
+								// h = (h * 30) + mm / 2;
+								// } else {
+								// h = (h * 30) + mm;
+								// }
 								h = (h * 30) + mm / 2;
 							} else if (timeSlots == 60 * 24) {
 								// TIME SLOTS == 60 * 24
-								h = (h * 60) + mm ;
+								h = (h * 60) + mm;
 							}
 
 							double consumed = 0;
@@ -457,11 +469,14 @@ public class OfflineSimulation {
 
 	private static double getRandomLoad(long time) {
 		if (SPARSE_LOADS == null) {
-			SPARSE_LOADS = new double[20000];
+			SPARSE_LOADS = new double[9000];
+//			for(int i = 1; i < SPARSE_LOADS.length; i++)
+//				SPARSE_LOADS[i] = Math.random() * 5;
 			SPARSE_LOADS[0] = 50;
 			SPARSE_LOADS[50] = 100;
-			SPARSE_LOADS[100] = 300;
-			SPARSE_LOADS[150] = 1000;
+			SPARSE_LOADS[100] = 200;
+			SPARSE_LOADS[150] = 100;
+			SPARSE_LOADS[200] = 50;
 			// for(int i = 0; i < SPARSE_LOADS.length; i++){
 			// if(i%(SPARSE_LOADS.length/4) != 0)
 			// SPARSE_LOADS[i] = 0;
@@ -469,25 +484,53 @@ public class OfflineSimulation {
 
 		}
 		if (FREQUENT_LOADS == null) {
-			FREQUENT_LOADS = new double[2000];
+			FREQUENT_LOADS = new double[3051];
+//			for(int i = 1; i < FREQUENT_LOADS.length; i++)
+//				FREQUENT_LOADS[i] = Math.random() * 5;
 			FREQUENT_LOADS[0] = 50;
 			FREQUENT_LOADS[50] = 100;
 			FREQUENT_LOADS[100] = 300;
 			FREQUENT_LOADS[150] = 1000;
+			FREQUENT_LOADS[200] = 1000;
+			FREQUENT_LOADS[250] = 50;
+			FREQUENT_LOADS[300] = 100;
+			FREQUENT_LOADS[350] = 300;
 			// for(int i = 0; i < SPARSE_LOADS.length; i++){
 			// if(i%(SPARSE_LOADS.length/4) != 0)
 			// SPARSE_LOADS[i] = 0;
 			// }
 		}
 		double[] loads = null;
+		
 		Date d = new Date(time);
 		String[] date = d.toString().split(" ");
 		String[] hhmmss = date[3].split(":");
 		int h = Integer.parseInt(hhmmss[0]);
-		if ((h >= 0 && h <= 7) || (h >= 8 && h <= 16)) {
+		if ((h >= 0 && h <= 7) || (h >= 14 && h <= 18)) {
 			loads = SPARSE_LOADS;
 		} else {
-			loads = FREQUENT_LOADS;
+			if(h > 7 && h < 14){
+				loads = FREQUENT_LOADS;
+				FREQUENT_LOADS[0] = 50;
+				FREQUENT_LOADS[50] = 100;
+				FREQUENT_LOADS[100] = 300;
+				FREQUENT_LOADS[150] = 500;
+				FREQUENT_LOADS[200] = 100;
+				FREQUENT_LOADS[250] = 50;
+				FREQUENT_LOADS[300] = 500;
+				FREQUENT_LOADS[350] = 300;
+			}else{
+				loads = FREQUENT_LOADS;
+				FREQUENT_LOADS[0] = 50;
+				FREQUENT_LOADS[50] = 100;
+				FREQUENT_LOADS[100] = 300;
+				FREQUENT_LOADS[150] = 1000;
+				FREQUENT_LOADS[200] = 1000;
+				FREQUENT_LOADS[250] = 50;
+				FREQUENT_LOADS[300] = 100;
+				FREQUENT_LOADS[350] = 300;
+			}
+			
 		}
 
 		int index = ((int) (Math.random() * loads.length));
@@ -541,7 +584,7 @@ public class OfflineSimulation {
 				// }
 				h = (h * 30) + (mm / 2);
 			}
-			
+
 			if (timeSlots == 60 * 24) {
 				int mm = Integer.parseInt(hhmmss[1]);
 				// TIME_SLOTS == 60*24
@@ -593,9 +636,9 @@ public class OfflineSimulation {
 		}
 	}
 
-	public static void createInputFromRealData() throws IOException {
+	public static void createInputFromRealData(String realDataFile) throws IOException {
 
-		File realFile = new File(REAL_INPUT_FILE);
+		File realFile = new File(realDataFile);
 		if (!realFile.exists()) {
 			System.err.println("NO REAL DATA FILE");
 			System.exit(1);
