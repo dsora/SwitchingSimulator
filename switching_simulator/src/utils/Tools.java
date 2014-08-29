@@ -8,6 +8,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Date;
+import java.util.List;
+
+import weka.classifiers.evaluation.NumericPrediction;
+import weka.classifiers.timeseries.WekaForecaster;
+import weka.core.Instances;
 
 public class Tools {
 	private static double PERC_STEP = 0.6;
@@ -343,6 +348,35 @@ public class Tools {
 			ret[i] = filter[i] && ret[i];
 		}
 		return ret;
+	}
+
+	public static boolean[] computeWekaSwitch(double real,
+			WekaForecaster[] forecasters,
+			Instances[] series, double[] means, double[] vars) throws Exception {
+		double[] prev = new double[forecasters.length];
+		if(forecasters.length != series.length || forecasters.length != means.length) {
+		
+			return null;
+		}
+		else{
+//			double[] sd = vars.clone();
+			for(int i = 0; i < forecasters.length; i++){
+				forecasters[i].primeForecaster(series[i]);
+				List<List<NumericPrediction>> forecast = forecasters[i].forecast(1,
+						System.out);
+				List<NumericPrediction> l = forecast.remove(0);
+				NumericPrediction np = l.remove(0);
+//				report[i] = np.predicted();
+				prev[i] = np.predicted();
+//				double sd = Math.sqrt(vars[i]);
+//				if(means[i] + sd > 5*real/3){
+//				if(means[i] > 3*(real)/means.length){
+				if(means[i] > real){	
+					prev[i]+= real;
+				}
+			}
+		}
+		return computeSwitch(real, prev);
 	}
 	
 }

@@ -1,6 +1,7 @@
 package main;
 
 import generator.RandomGenerator;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,13 +9,21 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import utils.EnergyPair;
 import utils.Tools;
+import weka.classifiers.timeseries.WekaForecaster;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
 
 public class OfflineSimulation {
 
@@ -23,8 +32,8 @@ public class OfflineSimulation {
 	private static double[] SPARSE_LOADS = null;
 	private static double[] vars = { 0, 10, 20, 30, 40 }; // FOR SIMULATED
 	// DATA TESTING
-//	private static double[] vars = { 0 }; // FOR REAL DATA TESTING
-//	private static String REAL_INPUT_FILE = "RealData.txt";
+	// private static double[] vars = { 0 }; // FOR REAL DATA TESTING
+	// private static String REAL_INPUT_FILE = "RealData.txt";
 	// private static double[] percents;
 	private final static double PRODUCT = 30000;
 	private final static String INPUT_FOLDER = "OfflineInput";
@@ -39,21 +48,21 @@ public class OfflineSimulation {
 	private static final long MONTHS_TO_MILLISEC = 1000L * 60L * 60L * 24L
 			* 30L;
 	private static final String STDDEV = "StdDev_";
-//	 private static final int[] ts = { 60 * 24 };
-	private static final int[] ts = { 24, 48, 30 * 24, 60 * 24 };
+	// private static final int[] ts = { 60 * 24 };
+	private static final int[] ts = {30*24}; //{ 24, 48, 30 * 24, 60 * 24 }
 	// private static final int TIME_SLOTS = 30 * 24;
 	// private static final int timeSlots = 48;
 	private static final int N_LINES = 4;
 	private static final int TRAINING_DAYS = 10;
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		try {
 			for (int i = 1; i <= TRAINING_DAYS; i++) {
 				createSimulatedConsumption(HISTORY_FOLDER + i);
 			}
-			 createSimulatedConsumption(INPUT_FOLDER);
-//			createInputFromRealData(REAL_INPUT_FILE);
-//			System.exit(0); //FOR TESTING THE SIMULATOR OUTPUT
+			createSimulatedConsumption(INPUT_FOLDER);
+			// createInputFromRealData(REAL_INPUT_FILE);
+			// System.exit(0); //FOR TESTING THE SIMULATOR OUTPUT
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -62,7 +71,7 @@ public class OfflineSimulation {
 			if (!tsFile.exists()) {
 				tsFile.mkdir();
 			}
-			for (int test = 1; test < 6; test++) {
+			for (int test = 6; test < 7; test++) {
 				File output;
 				File check = new File(tsFile.getPath() + File.separator
 						+ OUTPUT_FOLDER + "_t" + test);
@@ -144,7 +153,16 @@ public class OfflineSimulation {
 						// means_matrix, m2_s_matrix, timeSlots);
 						// getHistory(history3, variances_matrix, sizes,
 						// means_matrix, m2_s_matrix, timeSlots);
+						Instances[] series = null;
+						WekaForecaster[] forecasters = null;
+						if (test == 6) {
+							forecasters = forecastersInitialize(new File(
+									HISTORY_FOLDER + TRAINING_DAYS
 
+									+ File.separator + STDDEV + stdDev
+											+ File.separator + INPUT_FILE + TXT));
+							series = seriesInitialize(4);
+						}
 						double[] totalEnergy = new double[4];
 						double[] savedEnegy = new double[4];
 						for (int j = 0; j < savedEnegy.length; j++) {
@@ -156,10 +174,12 @@ public class OfflineSimulation {
 						boolean[] resultReal = new boolean[4];
 						// boolean[] resultIdeal = new boolean[4];
 						double real = 0;
-
+						
+//						double[] report = new double[4];
+//						PrintWriter rep = new PrintWriter(new File("/home/daniele/report.csv"));
 						while (inLine != null) {
 
-							String[] data = inLine.split(" ");
+							String[] data = inLine.split(",");
 							double ideal = Double.parseDouble(data[6]); // real
 																		// consumption
 																		// --->
@@ -204,7 +224,7 @@ public class OfflineSimulation {
 							for (int j = 1; j <= consumptions.length; j++) {
 								consumptions[j - 1] = Double
 										.parseDouble(data[j]);
-
+								
 								// mean and variances update
 								sizes[h][j - 1]++;
 								double delta = consumptions[j - 1]
@@ -222,6 +242,26 @@ public class OfflineSimulation {
 
 								if (resultReal[j - 1])
 									consumed += consumptions[j - 1];
+							}
+							
+							
+
+							if (test == 6) {
+								// int ppp;
+								// series = new Instances[4];
+								// for(int k = 0; k < series.length; k++){
+								// ArrayList<Attribute> atts = new
+								// ArrayList<Attribute>();
+								// Attribute a0 = new Attribute("time");
+								// Attribute a1 = new Attribute("value");
+								// atts.add(a0);
+								// atts.add(a1);
+								// series[k] = new Instances("temp"+k, atts,10);
+								// }
+								
+//								rep.println(data[0]+","+consumptions[1]+","+report[1]);
+								
+								addInstances(series, consumptions, 10, data[0]);
 							}
 
 							if (consumed > ideal) {
@@ -320,7 +360,18 @@ public class OfflineSimulation {
 											means_matrix[h]);
 									stop = true;
 									break;
+								case 6:
+									// TEST6
+									real *= percentage;
+									if (series[0].size() >= 10) {
+										resultReal = Tools.computeWekaSwitch(
+												real, forecasters, series,
+												means_matrix[h],
+												variances_matrix[h]);
+									}
+									break;
 								}
+
 							}
 							real = Double.parseDouble(data[5]);
 							try {
@@ -387,9 +438,9 @@ public class OfflineSimulation {
 						long timeForPayback = System.currentTimeMillis()
 								+ ((long) (Math.ceil(months))
 										* MONTHS_TO_MILLISEC * 2);
-						System.out.println(MONTHS_TO_MILLISEC);
+						System.out.println("TS"+timeSlots+" TEST "+test+" STD "+stdDev);
 						saved += new Date(timeForPayback);
-
+						
 						outputWriter.println(saved);
 						percentage -= 0.2;
 						if (percentage < 0)
@@ -400,14 +451,106 @@ public class OfflineSimulation {
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-
+//						rep.close();
+						
 						if (stop) {
 							break;
 						}
 					}
 				}
+				// if(test == 6)
+				// return;
 			}
 		}
+	}
+
+	private static boolean addInstances(Instances[] series,
+			double[] consumptions, int max, String ts) {
+		if (series.length != consumptions.length)
+			return false;
+		Attribute a0 = new Attribute("time");
+		Attribute a1 = new Attribute("value");
+
+		for (int i = 0; i < series.length; i++) {
+			DenseInstance x = new DenseInstance(2);
+			x.setValue(0, new Long(ts));
+			x.setValue(1, consumptions[i]);
+			if (series[i].size() < max) {
+				series[i].add(x);
+			} else {
+				insertInstance(series[i], x);
+			}
+		}
+
+		// for (Instances inst : series) {
+		// System.out.print(inst.size());
+		// System.out.println();
+		// }
+		return true;
+
+	}
+
+	private static void insertInstance(Instances set, Instance x) {
+		for (int i = 1; i < set.size(); i++) {
+			set.set(i - 1, set.get(i));
+		}
+		set.set(set.size() - 1, x);
+	}
+
+	private static Instances[] seriesInitialize(int size) {
+		ArrayList<Attribute> atts = new ArrayList<Attribute>();
+		Attribute a0 = new Attribute("time");
+		Attribute a1 = new Attribute("value");
+		atts.add(a0);
+		atts.add(a1);
+		Instances[] ret = new Instances[size];
+		for (int i = 0; i < size; i++) {
+			ret[i] = new Instances("temp" + i, atts, 10);
+		}
+		return ret;
+	}
+
+	private static WekaForecaster[] forecastersInitialize(File file)
+			throws Exception {
+		ArrayList<Attribute> atts = new ArrayList<Attribute>();
+		Attribute a0 = new Attribute("time");
+		Attribute a1 = new Attribute("value");
+		atts.add(a0);
+		atts.add(a1);
+
+		Instances[] instances = new Instances[4];
+		for (int i = 0; i < instances.length; i++) {
+			instances[i] = new Instances("I" + i, atts, 300000);
+		}
+
+		BufferedReader br = new BufferedReader(new FileReader(file));
+		String line = "";
+		while ((line = br.readLine()) != null) {
+			String[] elems = line.split(",");
+			for (int i = 1; i <= 4; i++) {
+				DenseInstance in = new DenseInstance(2);
+				// System.out.println(elems[0]);
+				in.setValue(a0, new Long(elems[0]));
+				// System.out.println(elems[i]);
+				in.setValue(a1, new Double(elems[i]));
+				instances[i - 1].add(in);
+			}
+		}
+		br.close();
+		WekaForecaster[] ret = new WekaForecaster[4];
+		for (int i = 0; i < ret.length; i++) {
+			WekaForecaster forecaster = new WekaForecaster();
+			forecaster.setFieldsToForecast("value");
+			List<String> fieldsToLag = new ArrayList<String>();
+			fieldsToLag.add("value");
+			forecaster.getTSLagMaker().setFieldsToLag(fieldsToLag);
+			forecaster.getTSLagMaker().setMinLag(1);
+			forecaster.getTSLagMaker().setMaxLag(10);
+			forecaster.getTSLagMaker().setTimeStampField("time");
+			forecaster.buildForecaster(instances[i], System.out);
+			ret[i] = forecaster;
+		}
+		return ret;
 	}
 
 	private static void createSimulatedConsumption(String foldName)
@@ -454,11 +597,11 @@ public class OfflineSimulation {
 
 				// (time - start) / 1000
 
-				String toPrint = "" + time + " ";
+				String toPrint = "" + time + ",";
 				for (int j = 0; j < loads.length; j++) {
-					toPrint += (consumptions[j] + loads[j]) + " ";
+					toPrint += (consumptions[j] + loads[j]) + ",";
 				}
-				toPrint += RandomGenerator.getRenewablePredicted() + " "
+				toPrint += RandomGenerator.getRenewablePredicted() + ","
 						+ RandomGenerator.getRenewableProvided();
 				wr.println(toPrint);
 				time += 1000;
@@ -470,8 +613,8 @@ public class OfflineSimulation {
 	private static double getRandomLoad(long time) {
 		if (SPARSE_LOADS == null) {
 			SPARSE_LOADS = new double[9000];
-//			for(int i = 1; i < SPARSE_LOADS.length; i++)
-//				SPARSE_LOADS[i] = Math.random() * 5;
+			// for(int i = 1; i < SPARSE_LOADS.length; i++)
+			// SPARSE_LOADS[i] = Math.random() * 5;
 			SPARSE_LOADS[0] = 50;
 			SPARSE_LOADS[50] = 100;
 			SPARSE_LOADS[100] = 200;
@@ -485,8 +628,8 @@ public class OfflineSimulation {
 		}
 		if (FREQUENT_LOADS == null) {
 			FREQUENT_LOADS = new double[3051];
-//			for(int i = 1; i < FREQUENT_LOADS.length; i++)
-//				FREQUENT_LOADS[i] = Math.random() * 5;
+			// for(int i = 1; i < FREQUENT_LOADS.length; i++)
+			// FREQUENT_LOADS[i] = Math.random() * 5;
 			FREQUENT_LOADS[0] = 50;
 			FREQUENT_LOADS[50] = 100;
 			FREQUENT_LOADS[100] = 300;
@@ -501,7 +644,7 @@ public class OfflineSimulation {
 			// }
 		}
 		double[] loads = null;
-		
+
 		Date d = new Date(time);
 		String[] date = d.toString().split(" ");
 		String[] hhmmss = date[3].split(":");
@@ -509,7 +652,7 @@ public class OfflineSimulation {
 		if ((h >= 0 && h <= 7) || (h >= 14 && h <= 18)) {
 			loads = SPARSE_LOADS;
 		} else {
-			if(h > 7 && h < 14){
+			if (h > 7 && h < 14) {
 				loads = FREQUENT_LOADS;
 				FREQUENT_LOADS[0] = 50;
 				FREQUENT_LOADS[50] = 100;
@@ -519,7 +662,7 @@ public class OfflineSimulation {
 				FREQUENT_LOADS[250] = 50;
 				FREQUENT_LOADS[300] = 500;
 				FREQUENT_LOADS[350] = 300;
-			}else{
+			} else {
 				loads = FREQUENT_LOADS;
 				FREQUENT_LOADS[0] = 50;
 				FREQUENT_LOADS[50] = 100;
@@ -530,7 +673,7 @@ public class OfflineSimulation {
 				FREQUENT_LOADS[300] = 100;
 				FREQUENT_LOADS[350] = 300;
 			}
-			
+
 		}
 
 		int index = ((int) (Math.random() * loads.length));
@@ -544,19 +687,24 @@ public class OfflineSimulation {
 			int timeSlots) {
 		String inLine = null;
 		BufferedReader br = null;
-
 		try {
 			br = new BufferedReader(new FileReader(input));
-			inLine = br.readLine();
-
+			while ((inLine = br.readLine()) != null) {
+				try {
+					String[] ctrl = inLine.split(",");
+					Long.parseLong(ctrl[0]);
+					break;
+				} catch (NumberFormatException nfe) {
+					continue;
+				}
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 			return;
 		}
-
 		while (inLine != null) {
 
-			String[] data = inLine.split(" ");
+			String[] data = inLine.split(",");
 
 			// real environment
 			// consumption
@@ -636,7 +784,8 @@ public class OfflineSimulation {
 		}
 	}
 
-	public static void createInputFromRealData(String realDataFile) throws IOException {
+	public static void createInputFromRealData(String realDataFile)
+			throws IOException {
 
 		File realFile = new File(realDataFile);
 		if (!realFile.exists()) {
