@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -13,8 +14,11 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -62,6 +66,14 @@ public class MainWindows extends JFrame {
 
 	private JPanel maxiPanel;
 
+	private JPanel secondPagePanel;
+
+	private JPanel sliderPane;
+
+	protected JSlider lightSlider;
+
+	private JPanel sliderPanel;
+
 	public MainWindows(String title) {
 		super(title);
 		// Rectangle maximized_size = GraphicsEnvironment
@@ -73,6 +85,13 @@ public class MainWindows extends JFrame {
 		} catch (IllegalAccessException e) {
 		} catch (UnsupportedLookAndFeelException e) {
 		}
+		
+		sliderPanel = new JPanel(new BorderLayout());
+		JTextField sliderTextField = new JTextField(3);
+		lightSlider = new LightSlider(sliderTextField);
+		sliderTextField.setText(""+lightSlider.getValue());
+		sliderPanel.add(lightSlider,BorderLayout.CENTER);
+		sliderPanel.add(sliderTextField,BorderLayout.EAST);
 		lines = new ArrayList<LinePanel>();
 		tabbedPane = new JTabbedPane();
 		
@@ -106,7 +125,7 @@ public class MainWindows extends JFrame {
 		stopAllButton.addActionListener(new ButtonListener());
 		
 		tempButton = new JButton("TESTING");
-		tempButton.addActionListener(new TempListener());
+		tempButton.addActionListener(new TempListener(lightSlider));
 
 		buttonPanel = new JPanel();
 		buttonPanel.add(startAllButton);
@@ -136,6 +155,8 @@ public class MainWindows extends JFrame {
 		maxiPanel = new JPanel(new GridLayout(1,2));
 		maxiPanel.add(firstPagePanel);
 		
+		
+		
 		tabbedPane.add("Line 1", line1);
 		ovLine1.setLinePanel(line1);
 		lines.add(line1);
@@ -152,7 +173,20 @@ public class MainWindows extends JFrame {
 		ovLine4.setLinePanel(line4);
 		lines.add(line4);
 		
-		maxiPanel.add(tabbedPane);
+		sliderPane = new JPanel(new GridLayout(2,1));
+		JLabel sliderLabel = new JLabel("Set Renewable Available");
+		
+		sliderPane.add(sliderLabel);
+		
+		sliderPane.add(sliderPanel,BorderLayout.SOUTH);
+		
+		secondPagePanel = new JPanel(new BorderLayout());
+		secondPagePanel.add(tabbedPane,BorderLayout.CENTER);
+		secondPagePanel.add(sliderPane,BorderLayout.SOUTH);
+		
+		maxiPanel.add(secondPagePanel);
+		
+//		maxiPanel.add(tabbedPane);
 		
 		this.add(maxiPanel);
 		
@@ -215,7 +249,10 @@ class ButtonListener implements ActionListener {
 
 //DA ELIMINARE!!!
 class TempListener implements ActionListener {
-
+	protected JSlider lightSlider;
+	public TempListener(JSlider lightSlider){
+		this.lightSlider = lightSlider;
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
@@ -225,7 +262,7 @@ class TempListener implements ActionListener {
 			parent = parent.getParent();
 		}
 		MainWindows mainWindows = (MainWindows) parent;
-		MasterSwitch master = new MasterSwitch();
+		MasterSwitch master = new MasterSwitch(lightSlider);
 		master.setInput(mainWindows.lines);
 		Thread t = new Thread(master);
 		t.start();

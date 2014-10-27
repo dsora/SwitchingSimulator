@@ -9,6 +9,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -19,21 +20,24 @@ import java.util.Set;
 
 import utils.EnergyPair;
 import utils.Tools;
-import weka.classifiers.timeseries.WekaForecaster;
-import weka.core.Attribute;
-import weka.core.DenseInstance;
-import weka.core.Instance;
-import weka.core.Instances;
+//import weka.classifiers.timeseries.WekaForecaster;
+//import weka.core.Attribute;
+//import weka.core.DenseInstance;
+//import weka.core.Instance;
+//import weka.core.Instances;
+//import weka.core.SparseInstance;
+//import weka.core.converters.CSVLoader;
 
 public class OfflineSimulation {
 
 	private final static int ITERATIONS = 60 * 60 * 24;
 	private static double[] FREQUENT_LOADS = null;
 	private static double[] SPARSE_LOADS = null;
-	private static double[] vars = { 0, 10, 20, 30, 40 }; // FOR SIMULATED
+	// private static double[] vars = { 0, 10, 20, 30, 40 }; // FOR SIMULATED
 	// DATA TESTING
-	// private static double[] vars = { 0 }; // FOR REAL DATA TESTING
-	// private static String REAL_INPUT_FILE = "RealData.txt";
+	private static double[] vars = { 0 }; // FOR REAL DATA TESTING
+	private static String REAL_INPUT_FILE = "RealData.txt";
+	private static String LOG = "./log";
 	// private static double[] percents;
 	private final static double PRODUCT = 30000;
 	private final static String INPUT_FOLDER = "OfflineInput";
@@ -48,30 +52,44 @@ public class OfflineSimulation {
 	private static final long MONTHS_TO_MILLISEC = 1000L * 60L * 60L * 24L
 			* 30L;
 	private static final String STDDEV = "StdDev_";
-	// private static final int[] ts = { 60 * 24 };
-	private static final int[] ts = {30*24}; //{ 24, 48, 30 * 24, 60 * 24 }
+	private static final int[] ts = { 24, 48, 30 * 24, 60 * 24 };
+	// private static final int[] ts = { 24, 48, 30 * 24, 60 * 24 };
 	// private static final int TIME_SLOTS = 30 * 24;
 	// private static final int timeSlots = 48;
 	private static final int N_LINES = 4;
-	private static final int TRAINING_DAYS = 10;
+	private static final int TRAINING_DAYS = 1;
+	private static final double NUM_SEC = 30;
+	private static final int WEKA_LAG = 40;
+	private static int count = 0;
+	private static double[] sum = new double[N_LINES];
+	private static boolean[] res_temp = new boolean[N_LINES];
+	private static int APPLIANCE1 = 19;
+	private static int APPLIANCE2 = 9;
+	private static int APPLIANCE3 = 14;
+	private static int APPLIANCE4 = 11;
 
 	public static void main(String[] args) throws Exception {
-		try {
-			for (int i = 1; i <= TRAINING_DAYS; i++) {
-				createSimulatedConsumption(HISTORY_FOLDER + i);
-			}
-			createSimulatedConsumption(INPUT_FOLDER);
-			// createInputFromRealData(REAL_INPUT_FILE);
-			// System.exit(0); //FOR TESTING THE SIMULATOR OUTPUT
-		} catch (IOException e) {
-			e.printStackTrace();
+		// try {
+		// for (int i = 1; i <= TRAINING_DAYS; i++) {
+		// createSimulatedConsumption(HISTORY_FOLDER + i);
+		// }
+		// // createSimulatedConsumption(INPUT_FOLDER);
+		// createInputFromRealData(REAL_INPUT_FILE);
+		// // System.exit(0); //FOR TESTING THE SIMULATOR OUTPUTF
+		// } catch (IOException e) {
+		// e.printStackTrace();
+		// }
+		File logDir = new File(LOG + File.separator);
+		if (!logDir.exists()) {
+			logDir.mkdir();
 		}
+
 		for (int timeSlots : ts) {
 			File tsFile = new File("TS_" + timeSlots);
 			if (!tsFile.exists()) {
 				tsFile.mkdir();
 			}
-			for (int test = 6; test < 7; test++) {
+			for (int test = 1; test < 6; test++) {
 				File output;
 				File check = new File(tsFile.getPath() + File.separator
 						+ OUTPUT_FOLDER + "_t" + test);
@@ -85,6 +103,10 @@ public class OfflineSimulation {
 					String inLine = "";
 					double percentage = 1;
 					for (int i = 0; i < 5; i++) {
+
+						PrintWriter logging = new PrintWriter(new File(LOG
+								+ File.separator + LOG + " " + timeSlots + " "
+								+ test + "_" + (1 - i * 0.2) + TXT));
 
 						File outFold = new File(check.getPath()
 								+ File.separator + STDDEV + stdDev);
@@ -108,6 +130,11 @@ public class OfflineSimulation {
 						try {
 
 							br = new BufferedReader(new FileReader(input));
+							// int skip = 0;
+							// while(skip < 100002){
+							// br.readLine();
+							// skip++;
+							// }
 							inLine = br.readLine();
 							outputWriter = new PrintWriter(output);
 						} catch (FileNotFoundException e) {
@@ -115,15 +142,16 @@ public class OfflineSimulation {
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-						long[][] sizes = new long[timeSlots][4]; // maintains
-																	// number of
-																	// samples
-						double[][] means_matrix = new double[timeSlots][4];
+						long[][] sizes = new long[timeSlots][N_LINES]; // maintains
+																		// number
+																		// of
+																		// samples
+						double[][] means_matrix = new double[timeSlots][N_LINES];
 						for (int j = 0; j < means_matrix.length; j++) {
-							means_matrix[j] = new double[4];
+							means_matrix[j] = new double[N_LINES];
 						}
 
-						double[][] variances_matrix = new double[timeSlots][4];
+						double[][] variances_matrix = new double[timeSlots][N_LINES];
 						for (int j = 0; j < variances_matrix.length; j++) {
 							variances_matrix[j] = new double[4];
 						}
@@ -134,10 +162,16 @@ public class OfflineSimulation {
 						}
 
 						for (int td = 1; td <= TRAINING_DAYS; td++) {
-							File history = new File(HISTORY_FOLDER + td
-									+ File.separator + STDDEV + stdDev
-									+ File.separator + INPUT_FILE + TXT);
 
+							// FILE HISTORY FOR SIMULATED ENVIRONMENT
+							// File history = new File(HISTORY_FOLDER + td
+							// + File.separator + STDDEV + stdDev
+							// + File.separator + INPUT_FILE + TXT);
+
+							// FILE HISTORY FOR REAL MEASUREMENTS ANALISYS
+							File history = new File(INPUT_FOLDER
+									+ File.separator + STDDEV + vars[0]
+									+ File.separator + INPUT_FILE + TXT);
 							getHistory(history, variances_matrix, sizes,
 									means_matrix, m2_s_matrix, timeSlots);
 							// File history2 = new File(HISTORY_FOLDER + 2
@@ -153,30 +187,45 @@ public class OfflineSimulation {
 						// means_matrix, m2_s_matrix, timeSlots);
 						// getHistory(history3, variances_matrix, sizes,
 						// means_matrix, m2_s_matrix, timeSlots);
-						Instances[] series = null;
-						WekaForecaster[] forecasters = null;
+						// Instances[] series = null;
+						// WekaForecaster[] forecasters = null;
+//						boolean flag = false;
+						File report = new File(System.getProperty("user.home")
+								+ File.separator + "temp_report" + percentage
+								+ ".txt");
+						PrintWriter temp_writer = new PrintWriter(report);
 						if (test == 6) {
-							forecasters = forecastersInitialize(new File(
-									HISTORY_FOLDER + TRAINING_DAYS
-
-									+ File.separator + STDDEV + stdDev
-											+ File.separator + INPUT_FILE + TXT));
-							series = seriesInitialize(4);
+							// forecasters = forecastersInitialize(
+							// new File(
+							// HISTORY_FOLDER + TRAINING_DAYS //simulated
+							// History File
+							//
+							// + File.separator + STDDEV + stdDev
+							// + File.separator + INPUT_FILE + TXT
+							// INPUT_FOLDER + File.separator + STDDEV
+							// + vars[0] + File.separator
+							// + INPUT_FILE + TXT)
+							// );
+							// series = seriesInitialize(N_LINES);
 						}
 						double[] totalEnergy = new double[4];
 						double[] savedEnegy = new double[4];
-						for (int j = 0; j < savedEnegy.length; j++) {
-							savedEnegy[j] = 0;
-						}
+						int[] wrong = new int[N_LINES];
+						// for (int j = 0; j < savedEnegy.length; j++) {
+						// savedEnegy[j] = 0;
+						// }
 						boolean[] old = new boolean[4];
 						int switchCount = 0;
 						int wrongCount = 0;
+						double totalRen = 0;
+						double usedRen = 0;
 						boolean[] resultReal = new boolean[4];
 						// boolean[] resultIdeal = new boolean[4];
 						double real = 0;
-						
-//						double[] report = new double[4];
-//						PrintWriter rep = new PrintWriter(new File("/home/daniele/report.csv"));
+
+						// double[] report = new double[4];
+						// PrintWriter rep = new PrintWriter(new
+						// File("/home/daniele/report.csv"));
 						while (inLine != null) {
 
 							String[] data = inLine.split(",");
@@ -224,7 +273,7 @@ public class OfflineSimulation {
 							for (int j = 1; j <= consumptions.length; j++) {
 								consumptions[j - 1] = Double
 										.parseDouble(data[j]);
-								
+
 								// mean and variances update
 								sizes[h][j - 1]++;
 								double delta = consumptions[j - 1]
@@ -243,47 +292,60 @@ public class OfflineSimulation {
 								if (resultReal[j - 1])
 									consumed += consumptions[j - 1];
 							}
-							
-							
 
-							if (test == 6) {
-								// int ppp;
-								// series = new Instances[4];
-								// for(int k = 0; k < series.length; k++){
-								// ArrayList<Attribute> atts = new
-								// ArrayList<Attribute>();
-								// Attribute a0 = new Attribute("time");
-								// Attribute a1 = new Attribute("value");
-								// atts.add(a0);
-								// atts.add(a1);
-								// series[k] = new Instances("temp"+k, atts,10);
-								// }
-								
-//								rep.println(data[0]+","+consumptions[1]+","+report[1]);
-								
-								addInstances(series, consumptions, 10, data[0]);
-							}
-
+							// if (test == 6) {
+							// // int ppp;
+							// // series = new Instances[4];
+							// // for(int k = 0; k < series.length; k++){
+							// // ArrayList<Attribute> atts = new
+							// // ArrayList<Attribute>();
+							// // Attribute a0 = new Attribute("time");
+							// // Attribute a1 = new Attribute("value");
+							// // atts.add(a0);
+							// // atts.add(a1);
+							// // series[k] = new Instances("temp"+k, atts,10);
+							// // }
+							//
+							// //
+							// rep.println(data[0]+","+consumptions[1]+","+report[1]);
+							// if (count < NUM_SEC) {
+							// for (int k = 0; k < consumptions.length; k++) {
+							// sum[k] += consumptions[k];
+							// }
+							// count++;
+							// } else {
+							// for (int k = 0; k < consumptions.length; k++) {
+							// sum[k] = (sum[k] + consumptions[k])
+							// / (count + 1);
+							// }
+							// addInstances(series, sum, WEKA_LAG, data[0]);
+							// count = 0;
+							// sum = new double[N_LINES];
+							// }
+							// }
+							
 							if (consumed > ideal) {
 								// CASE: ERROR
+								wrongCount++;
 								for (int j = 0; j < resultReal.length; j++) {
-
-									totalEnergy[j] += consumptions[j]; // consumption
-																		// total
-																		// for
-																		// line
+									
+										totalEnergy[j] += consumptions[j]; // consumption
+									 // total
+										// for
+										// line
 									// TO DELETE
-									if (resultReal[j]) {
-										savedEnegy[j] += consumptions[j]; // saved
-																			// energy
-																			// for
-																			// line
-									}
+									// if (resultReal[j]) {
+									// savedEnegy[j] += consumptions[j]; //
+									// saved
+									// // energy
+									// // for
+									// // line
+									// }
 									//
-
+									
 									if (resultReal[j] && !old[j]) {// Errors
-																	// count
-										wrongCount++;
+										wrong[j]++;						// count
+																// ORIGINAL
 									}
 									if (resultReal[j] != old[j]) {// total
 																	// switches
@@ -291,7 +353,11 @@ public class OfflineSimulation {
 										switchCount++;
 									}
 								}
-
+								logging.println("ERR: " + consumptions[0] + " "
+										+ consumptions[1] + " "
+										+ consumptions[2] + " "
+										+ consumptions[3] + " Cons: "
+										+ consumed + " Avail: " + ideal);
 								old = resultReal;
 								resultReal = new boolean[4]; // emergency
 																// recovery:
@@ -300,6 +366,7 @@ public class OfflineSimulation {
 																// wires
 
 							} else {
+								usedRen += consumed;
 								for (int j = 0; j < resultReal.length; j++) {
 
 									totalEnergy[j] += consumptions[j]; // consumption
@@ -320,6 +387,12 @@ public class OfflineSimulation {
 										switchCount++;
 									}
 								}
+
+								logging.println("OK: " + consumptions[0] + " "
+										+ consumptions[1] + " "
+										+ consumptions[2] + " "
+										+ consumptions[3] + " Cons: "
+										+ consumed + " Avail: " + ideal);
 								old = resultReal;
 								switch (test) {
 
@@ -360,19 +433,37 @@ public class OfflineSimulation {
 											means_matrix[h]);
 									stop = true;
 									break;
-								case 6:
-									// TEST6
-									real *= percentage;
-									if (series[0].size() >= 10) {
-										resultReal = Tools.computeWekaSwitch(
-												real, forecasters, series,
-												means_matrix[h],
-												variances_matrix[h]);
-									}
-									break;
+								// case 6:
+								// // TEST6
+								// real *= percentage;
+								// if (series[0].size() >= WEKA_LAG) {
+								// // System.out.println(22222);
+								// flag = true;
+								// if (count == 0) {
+								// // for (Instances e : series) {
+								// // for (Instance instance : e) {
+								// // System.out
+								// // .print(instance.value(0)+"\t");
+								// // }
+								// // System.out.println();
+								// // }
+								// // resultReal = Tools.computeWekaSwitch(
+								// // real, series,
+								// // means_matrix[h],
+								// // variances_matrix[h],
+								// // consumptions,
+								// // temp_writer);
+								// //
+								// // res_temp = resultReal;
+								// } else {
+								// resultReal = res_temp;
+								// }
+								// }
+								// break;
 								}
 
 							}
+							totalRen+=ideal;
 							real = Double.parseDouble(data[5]);
 							try {
 								inLine = br.readLine();
@@ -405,8 +496,8 @@ public class OfflineSimulation {
 						for (int j = 0; j < totalEnergy.length; j++) {
 							saved += "Line" + j + ": " + totalEnergy[j]
 									/ WStoKWH + "\t";
-							sum += savedEnegy[j];
-							totEn += totalEnergy[j];
+//							sum += savedEnegy[j];
+//							totEn += totalEnergy[j];
 						}
 						saved += "\n<Mean,Variance> per line:\n";
 						for (int j = 0; j < means_matrix.length; j++) {
@@ -424,9 +515,13 @@ public class OfflineSimulation {
 
 						double kwhTot = totEn / WStoKWH;
 						double kwhSaved = sum / WStoKWH;
+						double renwableProduced = totalRen / WStoKWH;
+						System.err.println(sum+" "+usedRen);
 						saved += "\nTot Saved: " + kwhSaved;
 						saved += "\nTot Consumed: " + kwhTot;
 						saved += "\nPercent saved: " + (sum / totEn) * 100
+								+ "%";
+						saved += "\nPercent used: " + (usedRen / totalRen) * 100
 								+ "%";
 						saved += "\nSaved Euro: " + kwhSaved * TO_EURO;
 						saved += "\nTotal Euro: " + kwhTot * TO_EURO;
@@ -438,9 +533,10 @@ public class OfflineSimulation {
 						long timeForPayback = System.currentTimeMillis()
 								+ ((long) (Math.ceil(months))
 										* MONTHS_TO_MILLISEC * 2);
-						System.out.println("TS"+timeSlots+" TEST "+test+" STD "+stdDev);
+						System.out.println("TS" + timeSlots + " TEST " + test
+								+ " STD " + stdDev);
 						saved += new Date(timeForPayback);
-						
+
 						outputWriter.println(saved);
 						percentage -= 0.2;
 						if (percentage < 0)
@@ -451,107 +547,147 @@ public class OfflineSimulation {
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-//						rep.close();
-						
+						// rep.close();
+
 						if (stop) {
 							break;
 						}
+						logging.close();
 					}
 				}
 				// if(test == 6)
 				// return;
+
 			}
 		}
 	}
 
-	private static boolean addInstances(Instances[] series,
-			double[] consumptions, int max, String ts) {
-		if (series.length != consumptions.length)
-			return false;
-		Attribute a0 = new Attribute("time");
-		Attribute a1 = new Attribute("value");
-
-		for (int i = 0; i < series.length; i++) {
-			DenseInstance x = new DenseInstance(2);
-			x.setValue(0, new Long(ts));
-			x.setValue(1, consumptions[i]);
-			if (series[i].size() < max) {
-				series[i].add(x);
-			} else {
-				insertInstance(series[i], x);
-			}
-		}
-
-		// for (Instances inst : series) {
-		// System.out.print(inst.size());
-		// System.out.println();
-		// }
-		return true;
-
-	}
-
-	private static void insertInstance(Instances set, Instance x) {
-		for (int i = 1; i < set.size(); i++) {
-			set.set(i - 1, set.get(i));
-		}
-		set.set(set.size() - 1, x);
-	}
-
-	private static Instances[] seriesInitialize(int size) {
-		ArrayList<Attribute> atts = new ArrayList<Attribute>();
-		Attribute a0 = new Attribute("time");
-		Attribute a1 = new Attribute("value");
-		atts.add(a0);
-		atts.add(a1);
-		Instances[] ret = new Instances[size];
-		for (int i = 0; i < size; i++) {
-			ret[i] = new Instances("temp" + i, atts, 10);
-		}
-		return ret;
-	}
-
-	private static WekaForecaster[] forecastersInitialize(File file)
-			throws Exception {
-		ArrayList<Attribute> atts = new ArrayList<Attribute>();
-		Attribute a0 = new Attribute("time");
-		Attribute a1 = new Attribute("value");
-		atts.add(a0);
-		atts.add(a1);
-
-		Instances[] instances = new Instances[4];
-		for (int i = 0; i < instances.length; i++) {
-			instances[i] = new Instances("I" + i, atts, 300000);
-		}
-
-		BufferedReader br = new BufferedReader(new FileReader(file));
-		String line = "";
-		while ((line = br.readLine()) != null) {
-			String[] elems = line.split(",");
-			for (int i = 1; i <= 4; i++) {
-				DenseInstance in = new DenseInstance(2);
-				// System.out.println(elems[0]);
-				in.setValue(a0, new Long(elems[0]));
-				// System.out.println(elems[i]);
-				in.setValue(a1, new Double(elems[i]));
-				instances[i - 1].add(in);
-			}
-		}
-		br.close();
-		WekaForecaster[] ret = new WekaForecaster[4];
-		for (int i = 0; i < ret.length; i++) {
-			WekaForecaster forecaster = new WekaForecaster();
-			forecaster.setFieldsToForecast("value");
-			List<String> fieldsToLag = new ArrayList<String>();
-			fieldsToLag.add("value");
-			forecaster.getTSLagMaker().setFieldsToLag(fieldsToLag);
-			forecaster.getTSLagMaker().setMinLag(1);
-			forecaster.getTSLagMaker().setMaxLag(10);
-			forecaster.getTSLagMaker().setTimeStampField("time");
-			forecaster.buildForecaster(instances[i], System.out);
-			ret[i] = forecaster;
-		}
-		return ret;
-	}
+	/*
+	 * private static boolean addInstances(Instances[] series, double[]
+	 * consumptions, int max, String ts) { if (series.length !=
+	 * consumptions.length) return false;
+	 * 
+	 * // Attribute a0 = new Attribute("time","dd-MM-yyyy HH:mm:ss"); //
+	 * Attribute a1 = new Attribute("value"); CSVLoader loader = new
+	 * CSVLoader();
+	 * 
+	 * Instances ins = null; try { loader.setSource(new
+	 * File("Models"+File.separator+"model_TemporizedCSV2_"+APPLIANCE1+".txt"));
+	 * ins = loader.getStructure(); } catch (IOException e) {
+	 * e.printStackTrace(); } for (int i = 0; i < series.length; i++) { //
+	 * DenseInstance x = new DenseInstance(2); // try { // x.setValue(0,
+	 * a0.parseDate(a0.formatDate(new Double(ts)))); // } catch
+	 * (NumberFormatException e) { // e.printStackTrace(); // } catch
+	 * (ParseException e) { // e.printStackTrace(); // } //
+	 * System.err.println(a0.formatDate(new Double(ts).doubleValue())); //
+	 * x.setValue(1, consumptions[i]); // if (series[i].size() < max) { //
+	 * series[i].add(x); // } else { // insertInstance(series[i], x); // }
+	 * Attribute a0 = new Attribute("time"); Attribute a1 = new
+	 * Attribute("apparentPower"); SparseInstance inst = new
+	 * SparseInstance(ins.numAttributes()); inst.setValue(1, new Long(ts));
+	 * inst.setValue(2, consumptions[i]);
+	 * 
+	 * if (series[i].size() < max) { series[i].add(inst); } else {
+	 * insertInstance(series[i], inst); } }
+	 * 
+	 * // for (Instances inst : series) { // System.out.print(inst.size()); //
+	 * System.out.println(); // } return true;
+	 * 
+	 * }
+	 */
+	/*
+	 * private static void insertInstance(Instances set, Instance x) { for (int
+	 * i = 1; i < set.size(); i++) { set.set(i - 1, set.get(i)); }
+	 * set.set(set.size() - 1, x); for (Instance instance : set) { //
+	 * System.out.println(instance.value(0)); } }
+	 */
+	/*
+	 * private static Instances[] seriesInitialize(int size) { //
+	 * ArrayList<Attribute> atts = new ArrayList<Attribute>(); // Attribute a0 =
+	 * new Attribute("time","dd-MM-yyyy HH:mm:ss"); // Attribute a1 = new
+	 * Attribute("value"); // // atts.add(a0); // atts.add(a1); Instances[] ret
+	 * = new Instances[size]; for (int i = 0; i < size; i++) { CSVLoader loader
+	 * = new CSVLoader(); try { loader.setSource(new
+	 * File("Models"+File.separator+"model_TemporizedCSV2_"+APPLIANCE1+".txt"));
+	 * ret[i] = loader.getStructure(); } catch (IOException e) {
+	 * e.printStackTrace(); }
+	 * 
+	 * // new Instances("temp" + i, atts, WEKA_LAG); } return ret; }
+	 */
+	// private static WekaForecaster[] forecastersInitialize()
+	// throws Exception {
+	// ArrayList<Attribute> atts = new ArrayList<Attribute>();
+	// Attribute a0 = new Attribute("time","dd-MM-yyyy HH:mm:ss");
+	// Attribute a1 = new Attribute("value");
+	// atts.add(a0);
+	// atts.add(a1);
+	//
+	// Instances[] instances = new Instances[4];
+	// // for (int i = 0; i < instances.length; i++) {//INIZIALIZE EMPTY
+	// INSTANCES SET
+	// // instances[i] = new Instances("I" + i, atts, 50000);
+	// // }
+	//
+	// // BufferedReader br = new BufferedReader(new FileReader(file));
+	//
+	// // String line = "";
+	// // int j = 0;
+	// // while ((line = br.readLine()) != null && j < 100000) {
+	// // String[] elems = null;
+	// // double count = 0;
+	// // double[] sums = new double[N_LINES];
+	// // while (count < NUM_SEC) {
+	// // elems = line.split(",");
+	// //
+	// // for (int i = 1; i <= N_LINES; i++) {
+	// // // System.out.println(elems.length);
+	// // double el = new Double(elems[i]);
+	// // sums[i - 1] += el;
+	// // }
+	// // count++;
+	// // if ((line = br.readLine()) == null)
+	// // break;
+	// // }
+	// // if (line == null && count < NUM_SEC)
+	// // break;
+	// // for (int i = 1; i <= 4; i++) {
+	// // DenseInstance in = new DenseInstance(2);
+	// // // System.out.println(elems[0]);
+	// // in.setValue(a0, a0.parseDate(a0.formatDate(new Double(elems[0]))));
+	// // // System.out.println(elems[i]);
+	// // in.setValue(atts.get(1), new Double(sums[i - 1] / count));
+	// // instances[i - 1].add(in);
+	// // }
+	// // j++;
+	// // }
+	// // br.close();
+	// int[] appliances = {
+	// APPLIANCE1,
+	// APPLIANCE2,
+	// APPLIANCE3,
+	// APPLIANCE4
+	// };
+	//
+	// WekaForecaster[] ret = new WekaForecaster[4];
+	// for (int i = 0; i < ret.length; i++) {
+	// CSVLoader loader = new CSVLoader();
+	// loader.setSource(new
+	// File("Models"+File.separator+"model_TemporizedCSV2_"+appliances[i]+".txt"));
+	// instances[i] = loader.getDataSet();
+	// WekaForecaster forecaster = new WekaForecaster();
+	// forecaster.setFieldsToForecast("apparentPower");
+	// List<String> fieldsToLag = new ArrayList<String>();
+	// fieldsToLag.add("apparentPower");
+	// forecaster.getTSLagMaker().setFieldsToLag(fieldsToLag);
+	// forecaster.getTSLagMaker().setMinLag(1);
+	// forecaster.getTSLagMaker().setMaxLag(WEKA_LAG);
+	// forecaster.getTSLagMaker().setTimeStampField("time");
+	// forecaster.getTSLagMaker().setAddAMIndicator(true);
+	// forecaster.buildForecaster(instances[i], System.out);
+	// ret[i] = forecaster;
+	// }
+	// return ret;
+	// }
 
 	private static void createSimulatedConsumption(String foldName)
 			throws IOException {
@@ -802,6 +938,10 @@ public class OfflineSimulation {
 
 		File toCreate = new File(folder.getPath() + File.separator + INPUT_FILE
 				+ TXT);
+
+		File toCreate2 = new File(folder.getPath() + File.separator
+				+ INPUT_FILE + 2 + TXT);
+
 		if (!toCreate.exists()) {
 			try {
 				toCreate.createNewFile();
@@ -810,22 +950,26 @@ public class OfflineSimulation {
 			}
 		}
 
-		Map<Integer, Map<Integer, EnergyPair>> map = new HashMap<Integer, Map<Integer, EnergyPair>>();
+		// Map<Integer, Map<Integer, EnergyPair>> map = new HashMap<Integer,
+		// Map<Integer, EnergyPair>>();
 
 		// MAP<CENTRALE,MAP<LINEA,MAP.ENTRY<ARRAY_INDEX,ENERGY_VALUE>>>
 		HashMap<Integer, EnergyPair> map1 = new HashMap<Integer, EnergyPair>();
-		map1.put(3, new EnergyPair(0, 0.0));
-		map1.put(4, new EnergyPair(1, 0.0));
-		HashMap<Integer, EnergyPair> map2 = new HashMap<Integer, EnergyPair>();
-		map2.put(2, new EnergyPair(2, 0.0));
-		map2.put(5, new EnergyPair(3, 0.0));
-
-		map.put(1, map1);
-		map.put(3, map2);
+		map1.put(APPLIANCE1, new EnergyPair(0, 0.0));
+		map1.put(APPLIANCE2, new EnergyPair(1, 0.0));
+		map1.put(APPLIANCE3, new EnergyPair(2, 0.0));
+		map1.put(APPLIANCE4, new EnergyPair(3, 0.0));
+		//
+		// HashMap<Integer, EnergyPair> map2 = new HashMap<Integer,
+		// EnergyPair>();
+		// map2.put(2, new EnergyPair(2, 0.0));
+		// map2.put(5, new EnergyPair(3, 0.0));
+		//
+		// map.put(1, map1);
+		// map.put(3, map2);
 
 		PrintWriter writer = new PrintWriter(new FileWriter(toCreate, true));
-
-		String line = null;
+		PrintWriter writer2 = new PrintWriter(new FileWriter(toCreate2, true));
 		BufferedReader br = null;
 
 		try {
@@ -836,99 +980,103 @@ public class OfflineSimulation {
 			System.exit(1);
 		}
 
-		// long systime = 0L;
-
-		while ((line = br.readLine()) != null) {
+		long systime = 0L;
+		String line = br.readLine();
+		int rows = 0;
+		while ((line = br.readLine()) != null && rows < 300000) {
+			line = line.replace('"', ' ');
 			String[] dataLine = line.split(",");
-			long now = Long.parseLong(dataLine[0].trim());
-			// if(systime == 0)
-			// systime = now;
-			if (dataLine[1].trim().equals("output")) { // CASE: OUTPUT
+			long now = Long.parseLong(dataLine[1].trim());
 
-				Integer key1 = new Integer(dataLine[2].trim());
-				Map<Integer, EnergyPair> m = map.get(key1);
-
-				if (m == null)
-					continue;
-
-				Integer key2 = new Integer(dataLine[3].trim());
-				EnergyPair pair = m.get(key2);
-
-				if (pair == null)
-					continue;
-
-				if (new Integer(dataLine[4].trim()) <= 0)
-					pair.setEnergy(0);
-				m.put(key2, pair);
-				map.put(key1, m);
-				addLine(writer, now, map);
-				continue;
-			}
-
-			if (!dataLine[1].trim().equals("energy")) { // CASE: energy
-				continue;
-			}
-
+			if (systime == 0)
+				systime = now;
+			// if (dataLine[1].trim().equals("output")) { // CASE: OUTPUT
 			//
-			// while(systime < now){
-			// addLine(writer,systime,map);
-			// systime+= 1000L;
+			// Integer key1 = new Integer(dataLine[2].trim());
+			// // Map<Integer, EnergyPair> m = map.get(key1);
+			//
+			// if (m == null)
+			// continue;
+			//
+			// Integer key2 = new Integer(dataLine[3].trim());
+			// EnergyPair pair = m.get(key2);
+			//
+			// if (pair == null)
+			// continue;
+			//
+			// if (new Integer(dataLine[4].trim()) <= 0)
+			// pair.setEnergy(0);
+			// m.put(key2, pair);
+			// map.put(key1, m);
+			// addLine(writer, now, map);
+			// continue;
 			// }
 
-			Integer key1 = new Integer(dataLine[2].trim());
-			Map<Integer, EnergyPair> m = map.get(key1);
+			// if (!dataLine[1].trim().equals("energy")) { // CASE: energy
+			// continue;
+			// }
 
-			if (m == null)
-				continue;
+			// Integer key1 = new Integer(dataLine[0].trim());
+			// Map<Integer, EnergyPair> m = map.get(key1);
+			//
+			// if (m == null)
+			// continue;
 
-			Integer key2 = new Integer(dataLine[3].trim());
-			EnergyPair pair = m.get(key2);
+			while (systime < now && rows < 300000) {
+				addLine(writer, systime, map1);
+				systime += 1000L;
+				rows++;
+			}
+
+			Integer key2 = new Integer(dataLine[0].trim());
+			EnergyPair pair = map1.get(key2);
 
 			if (pair == null)
 				continue;
 			// if(key2 == 4 && key1 == 3)
 			// System.err.println(dataLine[10].trim());
-			pair.setEnergy(Double.parseDouble(dataLine[10].trim()));
-			m.put(key2, pair);
-			map.put(key1, m);
+			pair.setEnergy(Double.parseDouble(dataLine[2].trim()));
+			map1.put(key2, pair);
+			// map.put(key1, m);
+			systime += 1000L;
 
-			addLine(writer, now, map);
-
+			addLine(writer, systime, map1);
+			rows++;
 			// systime = now;
 		}
-		Set<Integer> x = map.keySet();
-		for (Integer key : x) {
-			System.out.println(key + ":");
-			printMap(map.get(key));
-			System.out.println();
-		}
+		// Set<Integer> x = map1.keySet();
+		// for (Integer key : x) {
+		// System.out.println(key + ":");
+		// printMap(map1.get(key));
+		// System.out.println();
+		// }
 		writer.close();
 		br.close();
 	}
 
 	private static void addLine(PrintWriter writer, long systime,
-			Map<Integer, Map<Integer, EnergyPair>> map) {
+			Map<Integer, EnergyPair> map) {
 		Set<Integer> keys1 = map.keySet();
-		int size = 0;
-		for (Integer key : keys1) {
-			size += map.get(key).size();
-		}
+		int size = keys1.size();
+		// for (Integer key : keys1) {
+		// size += map.get(key).size();
+		// }
 
 		double[] consumptions = new double[size];
 
-		for (Integer key : keys1) {
-			Map<Integer, EnergyPair> m = map.get(key);
-			Collection<EnergyPair> pairs = m.values();
-			for (EnergyPair ep : pairs) {
-				consumptions[ep.getIndex()] = ep.getEnergy();
-			}
+		// for (Integer key : keys1) {
+		// Map<Integer, EnergyPair> m = map.get(key);
+		Collection<EnergyPair> pairs = map.values();
+		for (EnergyPair ep : pairs) {
+			consumptions[ep.getIndex()] = ep.getEnergy();
 		}
+		// }
 		String toPrint = "";
-		toPrint += systime + " ";
+		toPrint += systime + ",";
 		for (int i = 0; i < consumptions.length; i++) {
-			toPrint += consumptions[i] + " ";
+			toPrint += consumptions[i] + ",";
 		}
-		toPrint += RandomGenerator.getRenewablePredicted() + " "
+		toPrint += RandomGenerator.getRenewablePredicted() + ","
 				+ RandomGenerator.getRenewableProvided();
 		writer.println(toPrint);
 	}

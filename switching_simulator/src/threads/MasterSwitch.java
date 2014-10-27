@@ -5,13 +5,21 @@ import gui.LinePanel;
 
 import java.util.List;
 
+import javax.swing.JSlider;
+
 public class MasterSwitch implements Runnable {
 
 	private static final long SLEEP_TIME = 1000;
 	private List<LinePanel> inputList;
+//	private List<Double> inputList;
 
 	// private boolean[] result;
-
+	private JSlider energyIndicator;
+	
+	public MasterSwitch(JSlider slider){
+		energyIndicator = slider;
+	}
+	
 	@Override
 	public void run() {
 		while (true) {
@@ -19,8 +27,8 @@ public class MasterSwitch implements Runnable {
 				return;
 			}
 			long start = System.currentTimeMillis();
-			boolean[] ideal = computeSwitch(true);
-			boolean[] real = computeSwitch(false);
+			boolean[] ideal = computeSwitch(true); //considers no delay
+			boolean[] real = computeSwitch(false); //considers the delay
 			long end = System.currentTimeMillis();
 			if ((end - start) > 0) {
 				System.out.println("Time for operating switching: "
@@ -58,9 +66,11 @@ public class MasterSwitch implements Runnable {
 		double[] consume = new double[size];
 		double renewable;
 		if(ideal)
-			renewable = RandomGenerator.getRenewableProvided();
+//			renewable = RandomGenerator.getRenewableProvided();
+			renewable = (double)energyIndicator.getValue();
 		else 
-			renewable = RandomGenerator.getRenewablePredicted();
+//			renewable = RandomGenerator.getRenewablePredicted();
+			renewable = (double)energyIndicator.getValue();
 		int upper = (int) renewable;
 		int i = 0;
 		for (LinePanel line : inputList) {

@@ -16,9 +16,5 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="/home/daniele/wekafiles/packages/timeseriesForecasting/lib/jcommon-1.0.14.jar"/>
-	<classpathentry kind="lib" path="/home/daniele/wekafiles/packages/timeseriesForecasting/lib/jfreechart-1.0.13.jar"/>
-	<classpathentry kind="lib" path="/home/daniele/wekafiles/packages/timeseriesForecasting/pdm-timeseriesforecasting-ce-TRUNK-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="/home/daniele/weka-3-7-11/weka.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

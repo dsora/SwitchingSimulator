@@ -7,15 +7,16 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.Date;
 import java.util.List;
 
 import weka.classifiers.evaluation.NumericPrediction;
-import weka.classifiers.timeseries.WekaForecaster;
+//import weka.classifiers.timeseries.WekaForecaster;
 import weka.core.Instances;
 
 public class Tools {
-	private static double PERC_STEP = 0.6;
+	private static double PERC_STEP = 0.9;
 	private Tools(){
 		//Not-instantiable class: only static methods
 	}
@@ -83,7 +84,11 @@ public class Tools {
 			}
 			// step = System.currentTimeMillis();
 		}
-
+		for(int i = 0; i < consume.length; i++){
+			if(consume[i] == 0){
+				ret[i] = false;
+			}
+		}
 		return ret;
 	}
 	
@@ -104,7 +109,7 @@ public class Tools {
 		double max = 0;
 		boolean[] filter = new boolean[size];
 		for (int i = 0; i < variances.length; i++) {
-			if (variances[i] / 5000 > 1) {
+			if (variances[i] / 100 > 1) {
 				consume[i] = 0;
 				filter[i] = false;
 			} else {
@@ -115,9 +120,12 @@ public class Tools {
 				div++;
 				filter[i] = true;
 			}
+			if(consume[i] == 0){
+				filter[i] = false;
+			}
 		}
 
-		double renewable = percents[99 - ((int) (tot / (div * 50)))] * ren;
+		double renewable = percents[99 - ((int) (tot / (div * 1)))] * ren;
 //		double renewable = percents[99 - ((int) ( max / 2))] * ren;
 		int upper = (int) renewable;
 		boolean[] ret = new boolean[size];
@@ -180,7 +188,7 @@ public class Tools {
 		for (int i = 0; i < variances.length; i++) {
 			if (variances[i] / means[i] > 500) {
 				consume[i] = 0;
-				filter[i] = false;
+//				filter[i] = false;
 			} else {
 //				if(variances[i] > max){
 //					max = variances[i];
@@ -189,9 +197,12 @@ public class Tools {
 				div++;
 				filter[i] = true;
 			}
+			if(consume[i] == 0){
+				filter[i] = false;
+			}
 		}
 		
-		double renewable = percents[99 -(int)(((tot/div)/50)*9) ] * ren;
+		double renewable = percents[99 -(int)(((tot/div)/5)*1) ] * ren;
 //		double renewable = percents[99 - ((int) (tot / (div * 1.5)))] * ren;
 //		double renewable = percents[99 - ((int) ( max / 2))] * ren;
 		int upper = (int) renewable;
@@ -250,6 +261,9 @@ public class Tools {
 			} else {
 				filter[i] = true;
 			}
+			if(consume[i] == 0){
+				filter[i] = false;
+			}
 		}
 		
 		int upper = (int) renewable;
@@ -307,6 +321,9 @@ public class Tools {
 			} else {
 				filter[i] = true;
 			}
+			if(consume[i] == 0){
+				filter[i] = false;
+			}
 		}
 		int upper = (int) renewable;
 		boolean[] ret = new boolean[size];
@@ -350,33 +367,48 @@ public class Tools {
 		return ret;
 	}
 
-	public static boolean[] computeWekaSwitch(double real,
-			WekaForecaster[] forecasters,
-			Instances[] series, double[] means, double[] vars) throws Exception {
-		double[] prev = new double[forecasters.length];
-		if(forecasters.length != series.length || forecasters.length != means.length) {
-		
-			return null;
-		}
-		else{
-//			double[] sd = vars.clone();
-			for(int i = 0; i < forecasters.length; i++){
-				forecasters[i].primeForecaster(series[i]);
-				List<List<NumericPrediction>> forecast = forecasters[i].forecast(1,
-						System.out);
-				List<NumericPrediction> l = forecast.remove(0);
-				NumericPrediction np = l.remove(0);
-//				report[i] = np.predicted();
-				prev[i] = np.predicted();
+//	public static boolean[] computeWekaSwitch(double real,
+////			WekaForecaster[] forecasters,
+//			Instances[] series, double[] means, double[] vars, double[] consumptions, PrintWriter temp_writer) throws Exception {
+//		double[] prev = new double[forecasters.length];
+//		if(forecasters.length != series.length || forecasters.length != means.length) {
+//			return null;
+//		}
+//		else{
+////			double[] sd = vars.clone();
+//			
+//			
+//			
+//			for(int i = 0; i < forecasters.length; i++){
+//				forecasters[i].primeForecaster(series[i]);
+//				List<List<NumericPrediction>> forecast = forecasters[i].forecast(1,
+//						System.out);
+//				List<NumericPrediction> l = forecast.remove(0);
+//				NumericPrediction np = l.remove(0);
+////				report[i] = np.predicted();
+//				prev[i] = np.predicted();
+//				if(prev[i] < 0){
+//					prev[i] = 0;
+//				}
+////				System.out.print(prev[i]+"\t");
 //				double sd = Math.sqrt(vars[i]);
-//				if(means[i] + sd > 5*real/3){
-//				if(means[i] > 3*(real)/means.length){
-				if(means[i] > real){	
-					prev[i]+= real;
-				}
-			}
-		}
-		return computeSwitch(real, prev);
-	}
+////				if(means[i] + sd > 5*real/3){
+////				if(means[i] > 3*(real)/means.length){
+////				if(means[i] > real){
+////				if(true){
+////					prev[i]+= real;
+////				}
+//			}
+////			System.out.println();
+//			String line = "";
+//			int i = 0;
+//			for(i = 0; i < prev.length-1;i++){
+//				line += prev[i]+","+consumptions[i]+",";
+//			}
+//			line+=prev[i]+","+consumptions[i];
+//			temp_writer.println(line);
+//		}
+//		return computeSwitch(real, prev);
+//	}
 	
 }
